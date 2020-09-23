@@ -33,7 +33,16 @@ def compute_traj_coeffs(initial_state, final_state, tf):
     Hint: Use the np.linalg.solve function.
     """
     ########## Code starts here ##########
-
+    A = np.array([[1.0,0.0,0.0,0.0],
+                    [0.0,1.0,0.0,0.0],
+                    [0.0,tf,tf**2,tf**3],
+                    [0.0,1.0,2*tf,3*tf**2]])
+    flat_output = np.array([[initial_state.x, initial_state.y],
+                    [initial_state.xd, initial_state.yd],
+                    [final_state.x, final_state.y],
+                    [final_state.xd,final_state.yd]])
+    coeffs = np.dot(np.linalg.inv(A), flat_output)
+    coeffs = coeffs.T.flatten()
     ########## Code ends here ##########
     return coeffs
 
@@ -50,7 +59,24 @@ def compute_traj(coeffs, tf, N):
     t = np.linspace(0,tf,N) # generate evenly spaced points from 0 to tf
     traj = np.zeros((N,7))
     ########## Code starts here ##########
+    def base(t):
+        return np.array([1, t, t**2, t**3])
 
+    def base_dot(t):
+        return np.array([0, 1, t*2, 3*t**2])
+
+    def base_dot_dot(t):
+        return np.array([0, 0, 2, 6*t])
+
+    for i in range(N):
+        x_t = np.dot(coeffs[:4], base(t[i]))
+        y_t = np.dot(coeffs[4:], base(t[i]))
+        x_t_d = np.dot(coeffs[:4], base_dot(t[i]))
+        y_t_d = np.dot(coeffs[4:], base_dot(t[i]))
+        x_t_d_d = np.dot(coeffs[:4], base_dot_dot(t[i]))
+        y_t_d_d = np.dot(coeffs[4:], base_dot_dot(t[i]))
+        theta = np.arctan2(y_t_d, x_t_d)
+        traj[i] = [x_t, y_t, theta, x_t_d, y_t_d, x_t_d_d, y_t_d_d]
     ########## Code ends here ##########
 
     return t, traj
@@ -64,7 +90,22 @@ def compute_controls(traj):
         om (np.array shape [N]) om at each point of traj
     """
     ########## Code starts here ##########
-
+    m,n = traj.shape
+    V = np.zeros(m)
+    om = np.zeros(m)
+    for i in range(m):
+        theta = traj[i][2]
+        x_d = traj[i][3]
+        y_d = traj[i][4]
+        if theta == 0 or theta == math.pi:  #oh you need this
+            v = x_d/np.cos(theta)
+        else:
+            v = y_d/np.sin(theta)
+        x_d_d = traj[i][5]
+        y_d_d = traj[i][6]
+        J = np.array([[np.cos(theta), -v*np.sin(theta)], [np.sin(theta), v*np.cos(theta)]])
+        om[i] = np.dot(np.linalg.inv(J), np.array([x_d_d, y_d_d]))[1]
+        V[i] = v
     ########## Code ends here ##########
 
     return V, om
