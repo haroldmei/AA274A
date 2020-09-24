@@ -124,7 +124,7 @@ def compute_arc_length(V, t):
     """
     s = None
     ########## Code starts here ##########
-
+    s = cumtrapz(V, t, initial=0)
     ########## Code ends here ##########
     return s
 
@@ -145,7 +145,7 @@ def rescale_V(V, om, V_max, om_max):
     Hint: This should only take one or two lines.
     """
     ########## Code starts here ##########
-
+    V_tilde = np.minimum(np.minimum(V, V_max), om_max*V/np.absolute(om))
     ########## Code ends here ##########
     return V_tilde
 
@@ -162,7 +162,7 @@ def compute_tau(V_tilde, s):
     Hint: Use the function cumtrapz. This should take one line.
     """
     ########## Code starts here ##########
-
+    tau = cumtrapz(1/V_tilde, s, initial=0)
     ########## Code ends here ##########
     return tau
 
@@ -179,7 +179,7 @@ def rescale_om(V, om, V_tilde):
     Hint: This should take one line.
     """
     ########## Code starts here ##########
-
+    om_tilde = om/V*V_tilde
     ########## Code ends here ##########
     return om_tilde
 
