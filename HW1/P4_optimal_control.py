@@ -16,7 +16,19 @@ def ode_fun(tau, z):
         dz: the state derivative vector. Returns a numpy array.
     """
     ########## Code starts here ##########
+    om = -z[5]/2
+    V = (-z[3]*math.cos(z[2]) - z[4]*math.sin(z[2]))/2
 
+    # ODE Equations
+    x_dot = V*math.cos(z[2])
+    y_dot = V*math.sin(z[2])
+    th_dot = om
+    dHdth = z[3]*V*math.sin(z[2]) - z[4]*V*math.cos(z[2])
+    p_dot = np.hstack((0,0,dHdth))
+    r_dot = 0 #dummy state ode
+
+    dz = z[6]*np.hstack((x_dot,y_dot,th_dot,p_dot,r_dot))
+    
     ########## Code ends here ##########
     return dz
 
@@ -40,7 +52,14 @@ def bc_fun(za, zb):
     x0 = [0, 0, -np.pi/2.0]
 
     ########## Code starts here ##########
+    lambda_factor = 0.35
+    w = -zb[5]/2
+    V = (-zb[3]*math.cos(zb[2]) - zb[4]*math.sin(zb[2]))/2
+    
+    bca = np.array([za[0]-x0[0], za[1]-x0[1], za[2]-x0[2]])
 
+    H_f = lambda_factor + V**2 + w**2 + zb[3]*V*math.cos(zb[2]) + zb[4]*V*math.sin(zb[2]) + zb[5]*w 
+    bcb = np.array([zb[0]-xf[0], zb[1]-xf[1], zb[2]-xf[2], H_f])
     ########## Code ends here ##########
     return (bca, bcb)
 
@@ -79,7 +98,17 @@ def compute_controls(z):
         om: angular rate control input
     """
     ########## Code starts here ##########
-
+    ''' why did I do this? there is no \dot x.
+    V = np.sqrt(np.power(np.diff(z[:,0]), 2) + np.power(np.diff(z[:,1]), 2))
+    V = np.append(V, 0)
+    om = np.diff(z[:,2])
+    om = np.append(om, 0)    
+    '''
+    V = -0.5*(z[:,3]*np.cos(z[:,2]) + z[:,4]*np.sin(z[:,2]))
+    om = -0.5*z[:,5]
+    
+    V = np.array([V]).T # Convert to 1D column matrices
+    om = np.array([om]).T
     ########## Code ends here ##########
 
     return V, om
@@ -95,7 +124,14 @@ def main():
     Hint: The total time is between 15-25
     """
     ########## Code starts here ##########
+    num_ODE = 7
+    num_parameters = 0
+    num_left_boundary_conditions = 3
+    boundary_points = (0,1)
+    function = ode_fun
+    boundary_conditions = bc_fun
 
+    initial_guess = (1.0,1.0,-np.pi/2.0,-1,-1,5.0,10.0)
     ########## Code ends here ##########
 
     problem_inputs = {
