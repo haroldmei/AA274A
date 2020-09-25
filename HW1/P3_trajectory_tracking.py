@@ -60,6 +60,25 @@ class TrajectoryTracker:
         ########## Code starts here ##########
         V = 0
         om = 0
+
+        # use the prev V
+        if self.V_prev < V_PREV_THRES:
+            self.reset()
+            self.V_prev = V_PREV_THRES
+
+        xd = self.V_prev * np.cos(th)
+        yd = self.V_prev * np.sin(th)
+
+        xdd = xdd_d + self.kpx * (x_d - x) + self.kdx * (xd_d - xd)
+        ydd = ydd_d + self.kpy * (y_d - y) + self.kdy * (yd_d - yd)
+
+        if th == 0 or th == np.pi:  #oh you need this
+            V = xd/np.cos(th)
+        else:
+            V = yd/np.sin(th)
+
+        J = np.array([[np.cos(th), -V*np.sin(th)], [np.sin(th), V*np.cos(th)]])
+        om = np.dot(np.linalg.inv(J), np.array([xdd, ydd]))[1]
         ########## Code ends here ##########
 
         # apply control limits
