@@ -34,9 +34,13 @@ class PoseController:
         may also be useful, look up its documentation
         """
         ########## Code starts here ##########
-        rho = np.sqrt(x**2 + y**2)
-        alpha = wrapToPi(np.arctan2(y,x) - th + np.pi)
-        delta = wrapToPi(alpha + th)
+        x_delta = x - self.x_g
+        y_delta = y - self.y_g
+        th_delta = th - self.th_g
+
+        rho = np.sqrt(x_delta ** 2 + y_delta ** 2)
+        alpha = wrapToPi(np.arctan2(y_delta, x_delta) - th_delta + np.pi)
+        delta = wrapToPi(alpha + th_delta)
         
         V = self.k1 * rho * np.cos(alpha)
         om = self.k2 * alpha + self.k1 * np.sinc(alpha) * np.cos(alpha) * (alpha + self.k3 * delta)
