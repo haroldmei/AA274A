@@ -13140,10 +13140,106 @@ x(t_f) &amp; y(t_f)\\
 V(t_f)\cos(\theta(t_f)) &amp; V(t_f)\sin(\theta(t_f))\\
 \end{bmatrix}
 $$<p></p>
-<p>Plug in with $t_0 = 0$ and $t_f = 15$ to the above for $x(t),y(t),V(t),\theta(t)$, we can solve for all the coefficients.</p>
+<p>Plug in with the following:
+$$
+\begin{align*}
+t_0 &amp;= 0 \\
+x(0)&amp;=0 \\
+y(0)&amp;=0 \\
+V(0)&amp;=0.5 \\
+\theta(0)&amp;=-\frac{\pi}{2} \\
+t_f &amp;= 15 \\
+x(t_f)&amp;=5 \\
+y(t_f)&amp;=5 \\
+V(t_f)&amp;=0.5 \\
+\theta(t_f)&amp;=-\frac{\pi}{2}
+\end{align*}
+$$</p>
 
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The final solution for the equations is:</p>
+$$
+\begin{bmatrix} 
+x_1 &amp; y_1 \\
+x_2 &amp; y_2 \\
+x_3 &amp; y_3 \\
+x_4 &amp; y_4 \\
+\end{bmatrix} = 
+\begin{bmatrix} 
+1 &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 1 &amp; 0 &amp; 0\\
+1 &amp; 15 &amp; 225 &amp; 3375 \\
+0 &amp; 1 &amp; 30 &amp; 675\\
+\end{bmatrix}^{-1}
+\begin{bmatrix} 
+0 &amp; 0\\
+0 &amp; -0.5 \\
+5 &amp; 5\\
+0 &amp; -0,5\\
+\end{bmatrix}=
+\begin{bmatrix} 
+x_1 &amp; y_1 \\
+x_2 &amp; y_2 \\
+x_3 &amp; y_3 \\
+x_4 &amp; y_4 \\
+\end{bmatrix} 
+$$<p></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The coefficients for the equations can be calculated with python numpy:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="n">A</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">225</span><span class="p">,</span><span class="mi">3375</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">30</span><span class="p">,</span><span class="mi">675</span><span class="p">]])</span>
+<span class="n">b</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">],[</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">]])</span>
+<span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">A</span><span class="p">),</span><span class="n">b</span><span class="p">)</span>
+<span class="n">coeffs</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[1]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[ 0.        ,  0.        ],
+       [ 0.        , -0.5       ],
+       [ 0.06666667,  0.16666667],
+       [-0.00296296, -0.00740741]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
@@ -13197,7 +13293,7 @@ $$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span>
@@ -13210,7 +13306,7 @@ $$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;HW1/plots/differential_flatness.png&#39;</span><span class="p">)</span> 
@@ -13226,7 +13322,7 @@ $$
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[2]:</div>
+    <div class="prompt output_prompt">Out[3]:</div>
 
 
 
@@ -13252,7 +13348,7 @@ $$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="c1">#PDF(&#39;HW1/plots/sim_traj_openloop.pdf&#39;,size=(1000,600))</span>
@@ -13269,7 +13365,7 @@ $$
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[3]:</div>
+    <div class="prompt output_prompt">Out[4]:</div>
 
 
 
@@ -13323,7 +13419,7 @@ $$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;HW1/plots/sim_parking_forward.png&#39;</span><span class="p">)</span> 
@@ -13339,7 +13435,7 @@ $$
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[4]:</div>
+    <div class="prompt output_prompt">Out[5]:</div>
 
 
 
@@ -13365,7 +13461,7 @@ $$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;HW1/plots/sim_parking_reverse.png&#39;</span><span class="p">)</span> 
@@ -13381,7 +13477,7 @@ $$
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[5]:</div>
+    <div class="prompt output_prompt">Out[6]:</div>
 
 
 
@@ -13407,7 +13503,7 @@ $$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;HW1/plots/sim_parking_parallel.png&#39;</span><span class="p">)</span> 
@@ -13423,7 +13519,7 @@ $$
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[6]:</div>
+    <div class="prompt output_prompt">Out[7]:</div>
 
 
 
@@ -13511,7 +13607,7 @@ $$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;HW1/plots/sim_traj_closedloop.PNG&#39;</span><span class="p">)</span> 
@@ -13527,7 +13623,7 @@ $$
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[7]:</div>
+    <div class="prompt output_prompt">Out[8]:</div>
 
 
 
@@ -13682,7 +13778,7 @@ $$<p>Now the set of ODE for the 2P-BVP is the above Hamiltonian equations (1)-(6
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;HW1/plots/optimal_control.png&#39;</span><span class="p">)</span> 
@@ -13698,7 +13794,7 @@ $$<p>Now the set of ODE for the 2P-BVP is the above Hamiltonian equations (1)-(6
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[8]:</div>
+    <div class="prompt output_prompt">Out[9]:</div>
 
 
 
@@ -13724,7 +13820,7 @@ $$<p>Now the set of ODE for the 2P-BVP is the above Hamiltonian equations (1)-(6
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;HW1/plots/optimal_control-1.png&#39;</span><span class="p">)</span> 
@@ -13740,7 +13836,7 @@ $$<p>Now the set of ODE for the 2P-BVP is the above Hamiltonian equations (1)-(6
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[9]:</div>
+    <div class="prompt output_prompt">Out[10]:</div>
 
 
 
@@ -13793,7 +13889,7 @@ In order to minimize $J$, the larget the value $\lambda$, the smaller the time i
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="c1">#PDF(&#39;HW1/plots/sim_traj_optimal_control.pdf&#39;, size=(1000,600)) </span>
@@ -13810,7 +13906,7 @@ In order to minimize $J$, the larget the value $\lambda$, the smaller the time i
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[10]:</div>
+    <div class="prompt output_prompt">Out[11]:</div>
 
 
 
@@ -13837,7 +13933,7 @@ In order to minimize $J$, the larget the value $\lambda$, the smaller the time i
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="c1">#PDF(&#39;HW1/plots/sim_traj_optimal_control-1.pdf&#39;, size=(1000,600)) </span>
@@ -13854,7 +13950,7 @@ In order to minimize $J$, the larget the value $\lambda$, the smaller the time i
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[11]:</div>
+    <div class="prompt output_prompt">Out[12]:</div>
 
 
 
