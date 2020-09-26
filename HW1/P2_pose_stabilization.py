@@ -41,14 +41,14 @@ class PoseController:
         # need rotation
         Rotation = np.array([[np.cos(self.th_g), -np.sin(self.th_g)], [np.sin(self.th_g), np.cos(self.th_g)]])
         
-        new_x, new_y = np.dot(Rotation, np.array([x_delta, y_delta]))
+        new_x, new_y = np.dot(Rotation.T, np.array([x_delta, y_delta]))
 
         rho = np.sqrt(new_x ** 2 + new_y ** 2)
         alpha = wrapToPi(np.arctan2(new_y, new_x) - th_delta + np.pi)
         delta = wrapToPi(alpha + th_delta)
         
         V = self.k1 * rho * np.cos(alpha)
-        om = self.k2 * alpha + self.k1 * np.sinc(alpha) * np.cos(alpha) * (alpha + self.k3 * delta)
+        om = self.k2 * alpha + self.k1 * np.sinc(2*alpha/np.pi) * (alpha + self.k3 * delta)
         ########## Code ends here ##########
 
         # apply control limits
