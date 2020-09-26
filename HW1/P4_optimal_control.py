@@ -52,7 +52,7 @@ def bc_fun(za, zb):
     x0 = [0, 0, -np.pi/2.0]
 
     ########## Code starts here ##########
-    lambda_factor = 0.35
+    lambda_factor = 0.3
     w = -zb[5]/2
     V = (-zb[3]*math.cos(zb[2]) - zb[4]*math.sin(zb[2]))/2
     
@@ -77,7 +77,7 @@ def solve_bvp(problem_inputs, initial_guess):
     Read this documentation -- https://pythonhosted.org/scikits.bvp_solver/tutorial.html
     """
     problem = scikits.bvp_solver.ProblemDefinition(**problem_inputs)
-    soln = scikits.bvp_solver.solve(problem, solution_guess=initial_guess)
+    soln = scikits.bvp_solver.solve(problem, solution_guess=initial_guess, trace = 0)
 
     # Test if time is reversed in bvp_solver solution
     flip, tf = check_flip(soln(0))
@@ -100,15 +100,10 @@ def compute_controls(z):
     ########## Code starts here ##########
     ''' why did I do this? there is no \dot x.
     V = np.sqrt(np.power(np.diff(z[:,0]), 2) + np.power(np.diff(z[:,1]), 2))
-    V = np.append(V, 0)
     om = np.diff(z[:,2])
-    om = np.append(om, 0)    
     '''
     V = -0.5*(z[:,3]*np.cos(z[:,2]) + z[:,4]*np.sin(z[:,2]))
     om = -0.5*z[:,5]
-    
-    V = np.array([V]).T # Convert to 1D column matrices
-    om = np.array([om]).T
     ########## Code ends here ##########
 
     return V, om
@@ -131,7 +126,16 @@ def main():
     function = ode_fun
     boundary_conditions = bc_fun
 
-    initial_guess = (1.0,1.0,-np.pi/2.0,-1,-1,5.0,10.0)
+    #initial_guess = np.random.uniform(low=0, high=5, size=(7,))
+    #initial_guess[2] = -np.pi #np.random.uniform(-np.pi, np.pi)
+    #initial_guess[6] = 2000
+    #print initial_guess
+
+    #solution 1
+    #initial_guess = (2.56992092e-01,  9.49860400e-01, -3.14159265e+00,  5.06923249e-01, 2.80611260e+00,  2.59356897e+00,  2.00000000e+03)
+
+    #solution 2
+    initial_guess = (3.24207804e+00,  3.33710509e+00, -3.14159265e+00,  1.86043668e+00, 8.46899596e-01,  2.05139181e+00,  2.00000000e+03)
     ########## Code ends here ##########
 
     problem_inputs = {
