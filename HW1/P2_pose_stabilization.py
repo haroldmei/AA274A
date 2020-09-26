@@ -37,9 +37,14 @@ class PoseController:
         x_delta = x - self.x_g
         y_delta = y - self.y_g
         th_delta = th - self.th_g
+        
+        # need rotation
+        Rotation = np.array([[np.cos(self.th_g), -np.sin(self.th_g)], [np.sin(self.th_g), np.cos(self.th_g)]])
+        
+        new_x, new_y = np.dot(Rotation, np.array([x_delta, y_delta]))
 
-        rho = np.sqrt(x_delta ** 2 + y_delta ** 2)
-        alpha = wrapToPi(np.arctan2(y_delta, x_delta) - th_delta + np.pi)
+        rho = np.sqrt(new_x ** 2 + new_y ** 2)
+        alpha = wrapToPi(np.arctan2(new_y, new_x) - th_delta + np.pi)
         delta = wrapToPi(alpha + th_delta)
         
         V = self.k1 * rho * np.cos(alpha)
