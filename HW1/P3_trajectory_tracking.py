@@ -62,9 +62,10 @@ class TrajectoryTracker:
         om = 0
 
         # use the prev V
-        if self.V_prev < V_PREV_THRES:
-            self.reset()
-            self.V_prev = V_PREV_THRES
+        if np.absolute(self.V_prev) < V_PREV_THRES:
+            #self.reset()
+            sign = np.sign(self.V_prev) if self.V_prev != 0 else 1.0
+            self.V_prev = sign * V_PREV_THRES
 
         xd = self.V_prev * np.cos(th)
         yd = self.V_prev * np.sin(th)
@@ -73,6 +74,7 @@ class TrajectoryTracker:
         ydd = ydd_d + self.kpy * (y_d - y) + self.kdy * (yd_d - yd)
 
         J = np.array([[np.cos(th), -self.V_prev*np.sin(th)], [np.sin(th), self.V_prev*np.cos(th)]])
+        
         alpha,om = np.dot(np.linalg.inv(J), np.array([xdd, ydd]))
 
         V = self.V_prev + alpha * dt
