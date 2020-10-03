@@ -37,7 +37,11 @@ class AStar(object):
             Boolean True/False
         """
         ########## Code starts here ##########
-        
+        if x[0] < self.statespace_lo[0] or x[0] > self.statespace_hi[0] or \
+            x[1] < self.statespace_lo[1] or x[1] > self.statespace_hi[1]:
+            return False
+
+        return self.occupancy.is_free(x)
         ########## Code ends here ##########
 
     def distance(self, x1, x2):
@@ -52,7 +56,7 @@ class AStar(object):
         HINT: This should take one line.
         """
         ########## Code starts here ##########
-        
+        return np.linalg.norm(np.array(x1) - np.array(x2))
         ########## Code ends here ##########
 
     def snap_to_grid(self, x):
@@ -85,7 +89,14 @@ class AStar(object):
         """
         neighbors = []
         ########## Code starts here ##########
-        
+        possible_neighbors = [(x[0]-self.resolution,x[1]),(x[0]-self.resolution,x[1]-self.resolution),(x[0],x[1]-self.resolution),\
+            (x[0]+self.resolution,x[1]-self.resolution),(x[0]+self.resolution,x[1]),(x[0]+self.resolution,x[1]+self.resolution),\
+            (x[0],x[1]+self.resolution),(x[0]-self.resolution,x[1]+self.resolution)]
+            
+        for it in possible_neighbors:
+            item = self.snap_to_grid(it)
+            if self.is_free(item):
+                neighbors.append(item)
         ########## Code ends here ##########
         return neighbors
 
@@ -149,7 +160,35 @@ class AStar(object):
                 set membership efficiently using the syntax "if item in set".
         """
         ########## Code starts here ##########
-        
+        import heapq as hq
+        pq = [(0, self.x_init)]  # use priority queue 
+        while pq:
+            cur = hq.heappop(pq)
+            #print cur, self.cost_to_arrive
+            # stale queue element
+            #if cur[1] in self.cost_to_arrive and cur[0] >= self.cost_to_arrive[cur[1]]:
+            #    continue
+
+            if cur[1] == self.x_goal:
+                self.reconstruct_path()
+                return True
+
+            self.closed_set.add(cur[1])
+            neighbors = self.get_neighbors(cur[1])
+            for item in neighbors:
+                if item in self.closed_set:
+                    continue
+                
+                dist = self.distance(cur[1], item) + cur[0]
+                h = self.distance(item, self.x_goal)
+                if item not in self.open_set:
+                    self.open_set.add(item)
+                elif dist > self.cost_to_arrive[item]:
+                    continue
+                    
+                self.cost_to_arrive[item] = dist
+                hq.heappush(pq, (dist + h, item))
+                self.came_from[item] = cur[1]
         ########## Code ends here ##########
 
 class DetOccupancyGrid2D(object):
@@ -185,3 +224,22 @@ class DetOccupancyGrid2D(object):
             obs[1][0]-obs[0][0],
             obs[1][1]-obs[0][1],))
         ax.set(xlim=(0,self.width), ylim=(0,self.height))
+
+
+# test
+width = 10
+height = 10
+obstacles = [((6,7),(8,8)),((2,2),(4,3)),((2,5),(4,7)),((6,3),(8,5))]
+occupancy = DetOccupancyGrid2D(width, height, obstacles)
+
+x_init = (1, 1)
+x_goal = (9, 9)
+#occupancy.plot()
+
+astar = AStar((0, 0), (width, height), x_init, x_goal, occupancy)
+if not astar.solve():
+    print "No path found"
+else:
+    plt.rcParams['figure.figsize'] = [5, 5]
+    astar.plot_path()
+    astar.plot_tree()
