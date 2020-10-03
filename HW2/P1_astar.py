@@ -170,7 +170,7 @@ class AStar(object):
             #    continue
 
             if cur[1] == self.x_goal:
-                self.reconstruct_path()
+                self.path = self.reconstruct_path()
                 return True
 
             self.closed_set.add(cur[1])
@@ -185,7 +185,7 @@ class AStar(object):
                     self.open_set.add(item)
                 elif dist > self.cost_to_arrive[item]:
                     continue
-                    
+
                 self.cost_to_arrive[item] = dist
                 hq.heappush(pq, (dist + h, item))
                 self.came_from[item] = cur[1]
