@@ -104,7 +104,7 @@ def compute_controls(traj):
         x_d_d = traj[i][5]
         y_d_d = traj[i][6]
         J = np.array([[np.cos(theta), -v*np.sin(theta)], [np.sin(theta), v*np.cos(theta)]])
-        if i > 7990:
+        if i > 7997:
             print i, theta, v
         om[i] = np.dot(np.linalg.inv(J), np.array([x_d_d, y_d_d]))[1]
         V[i] = v
