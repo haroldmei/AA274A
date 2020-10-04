@@ -168,7 +168,6 @@ class AStar(object):
             # stale queue element
             #if cur[1] in self.cost_to_arrive and cur[0] >= self.cost_to_arrive[cur[1]]:
             #    continue
-
             if cur[1] == self.x_goal:
                 self.path = self.reconstruct_path()
                 return True
@@ -189,6 +188,7 @@ class AStar(object):
                 self.cost_to_arrive[item] = dist
                 hq.heappush(pq, (dist + h, item))
                 self.came_from[item] = cur[1]
+        return False
         ########## Code ends here ##########
 
 class DetOccupancyGrid2D(object):

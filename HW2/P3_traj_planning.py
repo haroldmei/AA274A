@@ -48,9 +48,35 @@ def compute_smoothed_traj(path, V_des, alpha, dt):
     Hint: Use splrep and splev from scipy.interpolate
     """
     ########## Code starts here ##########
-    
-    ########## Code ends here ##########
+    from scipy.interpolate import splev, splrep
+    sz = len(path)
+    extended_ts = [0.0]
+    ts = [0.0]
+    dxs = []
+    dys = []
+    ths = []
+    for i in range(1, sz):
+        l = np.linalg.norm(np.array(path[i-1]) - np.array(path[i]))
+        tm = l/V_des
+        count = int(tm/dt) + 1
+        dxs = dxs + [(path[i][0] - path[i-1][0])/tm] * count
+        dys = dys + [(path[i][1] - path[i-1][1])/tm] * count
+        ths = ths + [np.arccos((path[i][0] - path[i-1][0])/(tm*V_des))] * count
+        extended_ts = extended_ts + list(np.arange(extended_ts[-1], extended_ts[-1] + tm, dt))
+        ts.append(ts[-1] + tm)
 
+    sa = splrep(ts, np.array(path)[:,0])
+    sb = splrep(ts, np.array(path)[:,1])
+
+    traj_smoothed = np.zeros((len(extended_ts), 7))
+    traj_smoothed[:,0] = splev(extended_ts, sa)
+    traj_smoothed[:,1] = splev(extended_ts, sb)
+    traj_smoothed[:,2] = ths + [ths[-1]]
+    traj_smoothed[:,3] = dxs + [dxs[-1]]
+    traj_smoothed[:,4] = dys + [dys[-1]]
+    t_smoothed = extended_ts
+    #print traj_smoothed[-5:]
+    ########## Code ends here ##########
     return traj_smoothed, t_smoothed
 
 def modify_traj_with_limits(traj, t, V_max, om_max, dt):
@@ -71,7 +97,14 @@ def modify_traj_with_limits(traj, t, V_max, om_max, dt):
     Hint: This should almost entirely consist of calling functions from Problem Set 1
     """
     ########## Code starts here ##########
+    V,om = compute_controls(traj=traj)
+    s = compute_arc_length(V, t)
+    V_tilde = rescale_V(V, om, V_max, om_max)
+    tau = compute_tau(V_tilde, s)
+    om_tilde = rescale_om(V, om, V_tilde)
     
+    s_f = State(x=traj[-1][0], y=traj[-1][1], V=0.0, th=0.0)
+    t_new, V_scaled, om_scaled, traj_scaled =interpolate_traj(traj, tau, V_tilde, om_tilde, dt, s_f)
     ########## Code ends here ##########
 
     return t_new, V_scaled, om_scaled, traj_scaled
