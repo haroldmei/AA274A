@@ -154,7 +154,7 @@ class RRTConnect(object):
         success = False
         for k in range(max_iters):
             # forward first
-            print k
+            #print k
             if success:
                 break
             x_rand = np.random.uniform(low=self.statespace_lo, high=self.statespace_hi, size=(1, state_dim))[0]
@@ -162,24 +162,59 @@ class RRTConnect(object):
             x_near = V_fw[i_near]
             x_new = self.steer_towards_forward(x_near, x_rand, eps)
             if self.is_free_motion(self.obstacles, x_near, x_new):
-                n_fw += 1
                 P_fw[n_fw] = i_near
                 V_fw[n_fw] = x_new
+                n_fw += 1
 
                 i_connect = self.find_nearest_backward(V_bw[:n_bw], x_new)
                 x_connect = V_bw[i_connect]
                 while True:
                     x_new_connect = self.steer_towards_backward(x_new, x_connect, eps)
                     if self.is_free_motion(self.obstacles, x_new_connect, x_connect):
-                        n_bw += 1
                         P_bw[n_bw] = i_connect
                         V_bw[n_bw] = x_new_connect
+                        n_bw += 1
 
-                    if np.array_equal(x_new, x_new_connect):
-                        success = True
-                        self.path = reconstruc_path(V_fw, P_fw, n_fw, V_bw, P_bw, n_bw)
+                        #print i_connect, x_new_connect, x_connect, x_new, x_rand
+                        if np.array_equal(x_new, x_new_connect):
+                            success = True
+                            self.path = reconstruc_path(V_fw, P_fw, n_fw, V_bw, P_bw, n_bw)
+                            break
+
+                        x_connect = x_new_connect
+                    else:
                         break
 
+            # backward first then
+            x_rand = np.random.uniform(low=self.statespace_lo, high=self.statespace_hi, size=(1, state_dim))[0]
+            i_near = self.find_nearest_backward(V_bw[:n_bw], x_rand)
+            x_near = V_bw[i_near]
+            #x_new = self.steer_towards_backward(x_near, x_rand, eps)
+            x_new = self.steer_towards_backward(x_rand, x_near, eps)
+            if self.is_free_motion(self.obstacles, x_near, x_new):
+                P_bw[n_bw] = i_near
+                V_bw[n_bw] = x_new
+                n_bw += 1
+
+                i_connect = self.find_nearest_forward(V_fw[:n_fw], x_new)
+                x_connect = V_fw[i_connect]
+                while True:
+                    #x_new_connect = self.steer_towards_forward(x_new, x_connect, eps)
+                    x_new_connect = self.steer_towards_forward(x_connect, x_new, eps)
+                    if self.is_free_motion(self.obstacles, x_new_connect, x_connect):
+                        P_fw[n_fw] = i_connect
+                        V_fw[n_fw] = x_new_connect
+                        n_fw += 1
+
+                        #print i_connect, x_new_connect, x_connect, x_new, x_rand
+                        if np.array_equal(x_new, x_new_connect):
+                            success = True
+                            self.path = reconstruc_path(V_fw, P_fw, n_fw, V_bw, P_bw, n_bw)
+                            break
+
+                        x_connect = x_new_connect
+                    else:
+                        break
 
         ########## Code ends here ##########
 
@@ -277,22 +312,35 @@ class DubinsRRTConnect(RRTConnect):
 
     def find_nearest_forward(self, V, x):
         ########## Code starts here ##########
-        pass
+        from dubins import path_length
+        return np.argmin([path_length(v, x, self.turning_radius) for v in V])
         ########## Code ends here ##########
 
     def find_nearest_backward(self, V, x):
         ########## Code starts here ##########
-        pass
+        from dubins import path_length
+        return np.argmin([path_length(x, v, self.turning_radius) for v in V])
         ########## Code ends here ##########
 
     def steer_towards_forward(self, x1, x2, eps):
         ########## Code starts here ##########
-        pass
+        from dubins import path_sample
+        from dubins import path_length
+        samples = path_sample(x1, x2, 1.001*self.turning_radius, eps)[0]
+        if len(samples) > 1:
+            if path_length(x1,x2,self.turning_radius) > path_length(x1, samples[1],self.turning_radius):
+                x2 = samples[1]
+
+        return x2
         ########## Code ends here ##########
 
     def steer_towards_backward(self, x1, x2, eps):
         ########## Code starts here ##########
-        pass
+        rx1 = (-x1[0],-x1[1],-x1[2])
+        rx2 = (-x2[0],-x2[1],-x2[2])
+        res = self.steer_towards_forward(rx2, rx1, eps)
+        res = (-res[0],-res[1],-res[2])
+        return res
         ########## Code ends here ##########
 
     def is_free_motion(self, obstacles, x1, x2, resolution = np.pi/6):
