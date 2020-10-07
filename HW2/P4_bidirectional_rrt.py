@@ -134,12 +134,12 @@ class RRTConnect(object):
         ########## Code starts here ##########
         def reconstruc_path(V, P, n, V1, P1, n1):
             path = []
-            cur = n
+            cur = n - 1
             while cur != -1:
                 path.insert(0, V[cur])
                 cur = P[cur]
             
-            cur = n1
+            cur = n1 - 1
             while cur != -1:
                 path.append(V1[cur])
                 cur = P1[cur]
@@ -153,8 +153,6 @@ class RRTConnect(object):
 
         success = False
         for k in range(max_iters):
-            # forward first
-            #print k
             if success:
                 break
             x_rand = np.random.uniform(low=self.statespace_lo, high=self.statespace_hi, size=(1, state_dim))[0]
@@ -182,16 +180,19 @@ class RRTConnect(object):
                             break
 
                         x_connect = x_new_connect
+                        i_connect = n_bw - 1
                     else:
                         break
 
+            if success:
+                break
             # backward first then
             x_rand = np.random.uniform(low=self.statespace_lo, high=self.statespace_hi, size=(1, state_dim))[0]
             i_near = self.find_nearest_backward(V_bw[:n_bw], x_rand)
             x_near = V_bw[i_near]
             #x_new = self.steer_towards_backward(x_near, x_rand, eps)
             x_new = self.steer_towards_backward(x_rand, x_near, eps)
-            if self.is_free_motion(self.obstacles, x_near, x_new):
+            if self.is_free_motion(self.obstacles, x_new, x_near):
                 P_bw[n_bw] = i_near
                 V_bw[n_bw] = x_new
                 n_bw += 1
@@ -201,7 +202,7 @@ class RRTConnect(object):
                 while True:
                     #x_new_connect = self.steer_towards_forward(x_new, x_connect, eps)
                     x_new_connect = self.steer_towards_forward(x_connect, x_new, eps)
-                    if self.is_free_motion(self.obstacles, x_new_connect, x_connect):
+                    if self.is_free_motion(self.obstacles, x_connect, x_new_connect):
                         P_fw[n_fw] = i_connect
                         V_fw[n_fw] = x_new_connect
                         n_fw += 1
@@ -213,6 +214,7 @@ class RRTConnect(object):
                             break
 
                         x_connect = x_new_connect
+                        i_connect = n_fw - 1
                     else:
                         break
 
@@ -222,7 +224,7 @@ class RRTConnect(object):
         self.plot_problem()
         self.plot_tree(V_fw, P_fw, color="blue", linewidth=.5, label="RRTConnect forward tree")
         self.plot_tree_backward(V_bw, P_bw, color="purple", linewidth=.5, label="RRTConnect backward tree")
-        
+
         if success:
             self.plot_path(color="green", linewidth=2, label="solution path")
             plt.scatter(V_fw[:n_fw,0], V_fw[:n_fw,1], color="blue")
@@ -336,11 +338,19 @@ class DubinsRRTConnect(RRTConnect):
 
     def steer_towards_backward(self, x1, x2, eps):
         ########## Code starts here ##########
-        rx1 = (-x1[0],-x1[1],-x1[2])
-        rx2 = (-x2[0],-x2[1],-x2[2])
-        res = self.steer_towards_forward(rx2, rx1, eps)
-        res = (-res[0],-res[1],-res[2])
-        return res
+        from dubins import path_sample
+        from dubins import path_length
+
+        rx1 = (x1[0], x1[1], x1[2] - np.pi)
+        rx2 = (x2[0], x2[1], x2[2] - np.pi)
+        samples = path_sample(rx2, rx1, 1.001*self.turning_radius, eps)[0]
+        #print samples
+        if len(samples) > 1:
+            if path_length(rx2, rx1, self.turning_radius) > path_length(rx2, samples[1], self.turning_radius):
+                x1 = samples[1]
+                x1 = (x1[0], x1[1], x1[2] - np.pi)
+
+        return x1
         ########## Code ends here ##########
 
     def is_free_motion(self, obstacles, x1, x2, resolution = np.pi/6):
