@@ -63,8 +63,8 @@ def compute_smoothed_traj(path, V_des, alpha, dt):
         l = np.linalg.norm(np.array(path[i-1]) - np.array(path[i]))
         tm = l/V_des
         count = int(tm/dt) + 1
-        dxs = dxs + [(path[i][0] - path[i-1][0])/tm] * count
-        dys = dys + [(path[i][1] - path[i-1][1])/tm] * count
+        #dxs = dxs + [(path[i][0] - path[i-1][0])/tm] * count
+        #dys = dys + [(path[i][1] - path[i-1][1])/tm] * count
         ths = ths + [np.arccos((path[i][0] - path[i-1][0])/(tm*V_des))] * count
         extended_ts = extended_ts + list(np.arange(extended_ts[-1], extended_ts[-1] + tm, dt))
         ts.append(ts[-1] + tm)
@@ -76,8 +76,10 @@ def compute_smoothed_traj(path, V_des, alpha, dt):
     traj_smoothed[:,0] = splev(extended_ts, sa)
     traj_smoothed[:,1] = splev(extended_ts, sb)
     traj_smoothed[:,2] = ths + [ths[-1]]
-    traj_smoothed[:,3] = dxs + [dxs[-1]]
-    traj_smoothed[:,4] = dys + [dys[-1]]
+    traj_smoothed[:,3] = splev(extended_ts, sa, der=1)
+    traj_smoothed[:,4] = splev(extended_ts, sb, der=1)
+    traj_smoothed[:,5] = splev(extended_ts, sa, der=2)
+    traj_smoothed[:,6] = splev(extended_ts, sb, der=2)
     t_smoothed = extended_ts
     #print traj_smoothed[-5:]
     ########## Code ends here ##########
