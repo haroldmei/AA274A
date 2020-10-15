@@ -27,7 +27,9 @@ class SwitchingController(object):
             V, om: Control actions
         """
         ########## Code starts here ##########
-        if t < self.t_before_switch:
+        t_switch = self.traj_controller.traj_times[-1] - self.t_before_switch
+        #print self.traj_controller.traj_times[-1]
+        if t < t_switch:
             V, om = self.traj_controller.compute_control(x,y,th,t)
         else:
             V, om = self.pose_controller.compute_control(x,y,th,t)
@@ -56,16 +58,9 @@ def compute_smoothed_traj(path, V_des, alpha, dt):
     sz = len(path)
     extended_ts = [0.0]
     ts = [0.0]
-    dxs = []
-    dys = []
-    ths = []
     for i in range(1, sz):
-        l = np.linalg.norm(np.array(path[i-1]) - np.array(path[i]))
+        l = np.linalg.norm(np.array(path[i-1]) - np.array(path[i])) * 1.2
         tm = l/V_des
-        count = int(tm/dt) + 1
-        dxs = dxs + [(path[i][0] - path[i-1][0])/tm] * count
-        dys = dys + [(path[i][1] - path[i-1][1])/tm] * count
-        ths = ths + [np.arccos((path[i][0] - path[i-1][0])/(tm*V_des))] * count
         extended_ts = extended_ts + list(np.arange(extended_ts[-1], extended_ts[-1] + tm, dt))
         ts.append(ts[-1] + tm)
 
@@ -75,11 +70,15 @@ def compute_smoothed_traj(path, V_des, alpha, dt):
     traj_smoothed = np.zeros((len(extended_ts), 7))
     traj_smoothed[:,0] = splev(extended_ts, sa)
     traj_smoothed[:,1] = splev(extended_ts, sb)
-    traj_smoothed[:,2] = ths + [ths[-1]]
-    traj_smoothed[:,3] = dxs + [dxs[-1]]
-    traj_smoothed[:,4] = dys + [dys[-1]]
+    traj_smoothed[:,3] = splev(extended_ts, sa, der=1)
+    traj_smoothed[:,4] = splev(extended_ts, sb, der=1)    
+    traj_smoothed[:,5] = splev(extended_ts, sa, der=2)
+    traj_smoothed[:,6] = splev(extended_ts, sb, der=2)
+
+    traj_smoothed[:,2] = np.arccos(traj_smoothed[:,3]/(traj_smoothed[:,3]**2 + traj_smoothed[:,4]**2)**0.5) 
+
     t_smoothed = extended_ts
-    #print traj_smoothed[-5:]
+    #print traj_smoothed[:,2], V_des
     ########## Code ends here ##########
     return traj_smoothed, t_smoothed
 
@@ -107,7 +106,7 @@ def modify_traj_with_limits(traj, t, V_max, om_max, dt):
     tau = compute_tau(V_tilde, s)
     om_tilde = rescale_om(V, om, V_tilde)
     
-    s_f = State(x=traj[-1][0], y=traj[-1][1], V=0.3, th=traj[-1][2])
+    s_f = State(x=traj[-1][0], y=traj[-1][1], V=0.0, th=0.0)
     t_new, V_scaled, om_scaled, traj_scaled =interpolate_traj(traj, tau, V_tilde, om_tilde, dt, s_f)
     ########## Code ends here ##########
 

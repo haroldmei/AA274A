@@ -104,8 +104,6 @@ def compute_controls(traj):
         x_d_d = traj[i][5]
         y_d_d = traj[i][6]
         J = np.array([[np.cos(theta), -v*np.sin(theta)], [np.sin(theta), v*np.cos(theta)]])
-        if i > 7997:
-            print i, theta, v
         om[i] = np.dot(np.linalg.inv(J), np.array([x_d_d, y_d_d]))[1]
         V[i] = v
     ########## Code ends here ##########
@@ -147,7 +145,11 @@ def rescale_V(V, om, V_max, om_max):
     Hint: This should only take one or two lines.
     """
     ########## Code starts here ##########
-    V_tilde = np.minimum(np.minimum(V, V_max), om_max*V/np.absolute(om))
+    V_abs = np.absolute(V)
+    om_abs = np.absolute(om)
+    V_tilde_abs = np.minimum(np.minimum(V_abs, V_max), om_max*V_abs/om_abs)
+
+    V_tilde = np.sign(V) * V_tilde_abs
     ########## Code ends here ##########
     return V_tilde
 

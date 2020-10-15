@@ -246,9 +246,11 @@ class DubinsRRT(RRT):
         from dubins import path_sample
         from dubins import path_length
         samples = path_sample(x1, x2, 1.001*self.turning_radius, eps)[0]
-        idx = self.find_nearest(samples, x2)
-        if path_length(x1,x2,self.turning_radius) > path_length(samples[-1],x2,self.turning_radius):
-            x2 = samples[idx]
+        #print samples
+        #idx = self.find_nearest(samples, x2)
+        if len(samples) > 1:
+            if path_length(x1,x2,self.turning_radius) > path_length(x1, samples[1],self.turning_radius):
+                x2 = samples[1]
 
         return x2
         ########## Code ends here ##########
