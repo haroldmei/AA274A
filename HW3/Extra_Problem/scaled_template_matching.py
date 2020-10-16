@@ -20,7 +20,35 @@ def template_match(template, image,
         matches: A list of (top-left y, top-left x, bounding box height, bounding box width) tuples for each match's bounding box.
     """
     ########## Code starts here ##########
-    raise NotImplementedError("Implement me!")
+
+    A = []
+    box_height = template.shape[0]
+    box_width = template.shape[1]
+    corr = cv2.matchTemplate(image, template, method=cv2.TM_CCORR_NORMED)
+    for q in range(corr.shape[0]):
+        for w in range(corr.shape[1]):
+            if corr[q][w] >= detection_threshold:
+                A.append((q, w, box_height, box_width))
+
+    down_scale_im = cv2.pyrDown(image)
+    for a in range(num_downscales):
+        corr_down = cv2.matchTemplate(down_scale_im,template, method=cv2.TM_CCORR_NORMED)
+        for x in range(corr_down.shape[0]):
+            for y in range(corr_down.shape[1]):
+                if corr_down[x][y] >= detection_threshold:
+                    A.append((int(x/(0.5**(a+1))), int(y/(0.5**(a+1))), int(box_height/(0.5**(a+1))), int(box_width/(0.5**(a+1)))))
+        down_scale_im = cv2.pyrDown(down_scale_im)
+
+    up_scale_im = cv2.pyrUp(image)
+    for b in range(num_upscales):
+        corr_up = cv2.matchTemplate(up_scale_im, template, method=cv2.TM_CCORR_NORMED)
+        for i in range(corr_up.shape[0]):
+            for j in range(corr_up.shape[1]):
+                if corr_up[i][j] >= detection_threshold:
+                   A.append((int(i/(2**(b+1))), int(j/(2**(b+1))), int(box_height/(2**(b+1))), int(box_width/(2**(b+1)))))
+        up_scale_im = cv2.pyrUp(up_scale_im)
+
+    return A
     ########## Code ends here ##########
 
 

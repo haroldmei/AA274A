@@ -17,7 +17,19 @@ def template_match(template, image, threshold=0.999):
         matches: A list of (top-left y, top-left x, bounding box height, bounding box width) tuples for each match's bounding box.
     """
     ########## Code starts here ##########
-    raise NotImplementedError("Implement me!")
+    corr = cv2.matchTemplate(image, template, method=cv2.TM_CCORR_NORMED)
+    box_height = template.shape[0]
+    box_width = template.shape[1]
+
+    A = []
+
+    for i in range(corr.shape[0]):
+        for j in range(corr.shape[1]):
+            if corr[i][j] >= threshold:
+                A.append((i, j, box_height, box_width))
+
+    return A
+    #raise NotImplementedError("Implement me!")
     ########## Code ends here ##########
 
 

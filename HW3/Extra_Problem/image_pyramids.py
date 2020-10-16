@@ -14,7 +14,15 @@ def half_downscale(image):
         downscaled_image: A half-downscaled version of image.
     """
     ########## Code starts here ##########
-    raise NotImplementedError("Implement me!")
+    m, n, c = image.shape[0], image.shape[1], image.shape[2]
+    down_scaleim = np.zeros((m/2, n/2, c))
+
+    for i in range(m/2):
+        for j in range(n/2):
+            for k in range(c):
+                down_scaleim[i, j, k] = image[2*i, 2*j, k]
+    return down_scaleim
+
     ########## Code ends here ##########
 
 
@@ -27,7 +35,12 @@ def blur_half_downscale(image):
         downscaled_image: A half-downscaled version of image.
     """
     ########## Code starts here ##########
-    raise NotImplementedError("Implement me!")
+    blur_im = cv2.GaussianBlur(image, ksize=(5, 5), sigmaX=0.7)
+
+    downscaled_image = half_downscale(blur_im)
+
+    return downscaled_image
+
     ########## Code ends here ##########
 
 
@@ -40,7 +53,21 @@ def two_upscale(image):
         upscaled_image: A 2x-upscaled version of image.
     """
     ########## Code starts here ##########
-    raise NotImplementedError("Implement me!")
+    m, n, c = image.shape[0], image.shape[1], image.shape[2]
+    double_width = np.zeros((m, 2*n, c))
+
+    for i in range(n):
+        for k in range(c):
+            double_width[:, 2 * i, k] = image[:, i, k]
+            double_width[:, 2 * i + 1, k] = image[:, i, k]
+
+    upscaled_image = np.zeros((2 * m, 2 * n, c))
+    for j in range(m):
+        for t in range(c):
+            upscaled_image[2 * j, :, t] = double_width[j, :, t]
+            upscaled_image[2 * j + 1, :, t] = double_width[j, :, t]
+
+    return upscaled_image
     ########## Code ends here ##########
 
 
@@ -60,7 +87,20 @@ def bilinterp_upscale(image, scale):
     filt = f.T * f
 
     ########## Code starts here ##########
-    raise NotImplementedError("Implement me!")
+    print filt
+
+    upwidth_im = np.zeros((m, scale * n, c))
+
+    upscaled_image = np.zeros((scale * m, scale * n, c))
+
+    for i in range(n):
+        for k in range(c):
+            upwidth_im[:, scale * i, k] = image[:, i, k]
+
+    for j in range(m):
+        for t in range(c):
+            upscaled_image[scale * j, :, t] = upwidth_im[j, :, t]
+    return cv2.filter2D(upscaled_image, -1, filt)
     ########## Code ends here ##########
 
 
@@ -78,7 +118,26 @@ def main():
     # matches exactly what's in the data array you pass in.
     
     ########## Code starts here ##########
-    raise NotImplementedError("Implement me!")
+    down_scale_image = half_downscale(test_card)
+    blurdown_scale_image = blur_half_downscale(test_card)
+    upscale_im = two_upscale(favicon)
+    bilin_upscale_im = bilinterp_upscale(favicon, 8)
+
+    for i in range(2):
+        down_scale_image = half_downscale(down_scale_image)
+        blurdown_scale_image = blur_half_downscale(blurdown_scale_image)
+        upscale_im = two_upscale(upscale_im)
+
+
+    plt.imshow(down_scale_image)
+    plt.show()
+    plt.imshow(blurdown_scale_image)
+    plt.show()
+    plt.imshow(upscale_im)
+    plt.show()
+    plt.imshow(bilin_upscale_im)
+    plt.show()
+
     ########## Code ends here ##########
 
 

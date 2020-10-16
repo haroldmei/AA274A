@@ -16,7 +16,35 @@ def corr(F, I):
         G: An (m, n)-shaped ndarray containing the correlation of the filter with the image.
     """
     ########## Code starts here ##########
-    raise NotImplementedError("Implement me!")
+    m, n, c  = I.shape[0], I.shape[1], I.shape[2]
+    G = np.zeros((m, n))
+    k, l = F.shape[0], F.shape[1]
+    pad_height = m + 2*(k/2)
+    pad_width = n + 2*(l/2)
+    padim = np.zeros((pad_height, pad_width, c))
+
+    f = np.reshape(F, (1, k*l*c))
+
+    # zero padding image
+    for i in range(m):
+       for j in range(n):
+           for t in range(c):
+               padim[(i+(k/2)), (j+(k/2)), t] = I[i, j, t]
+
+    for i in range(m):
+        for j in range(n):
+            a = padim[i:i+2*(k/2)+1]
+            if l%2 == 0:
+                tij = a[:, j:j + 2 * (l / 2)]
+            else:
+                tij = a[:, j:j+2*(l/2)+1]
+
+            tij = np.reshape(tij, (k*l*c, 1))
+
+            G[i, j] = np.dot(np.array(f), np.array(tij))
+    return G
+
+
     ########## Code ends here ##########
 
 
@@ -30,7 +58,35 @@ def norm_cross_corr(F, I):
         G: An (m, n)-shaped ndarray containing the normalized cross-correlation of the filter with the image.
     """
     ########## Code starts here ##########
-    raise NotImplementedError("Implement me!")
+    m, n, c  = I.shape[0], I.shape[1], I.shape[2]
+    G = np.zeros((m, n))
+    k, l = F.shape[0], F.shape[1]
+    pad_height = m + 2*(k/2)
+    pad_width = n + 2*(l/2)
+    padim = np.zeros((pad_height, pad_width, c))
+
+    f = np.reshape(F, (1, k*l*c))
+
+    for i in range(m):
+       for j in range(n):
+           for t in range(c):
+               padim[(i+(k/2)), (j+(k/2)), t] = I[i, j, t]
+
+    for i in range(m):
+        for j in range(n):
+            a = padim[i:i+2*(k/2)+1]
+            if l%2 == 0:
+                tij = a[:, j:j + 2 * (l / 2)]
+            else:
+                tij = a[:, j:j+2*(l/2)+1]
+
+            tij = np.reshape(tij, (k*l*c, 1))
+            if(np.linalg.norm(tij) == 0):
+                G[i, j] = 0
+            else:
+                G[i, j] = np.dot(np.array(f), np.array(tij))/(np.linalg.norm(f) * np.linalg.norm(tij))
+    return G
+
     ########## Code ends here ##########
 
 

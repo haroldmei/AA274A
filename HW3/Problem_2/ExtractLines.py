@@ -116,9 +116,32 @@ def SplitLinesRecursive(theta, rho, startIdx, endIdx, params):
     HINT: Call FindSplit() to find an index to split at.
     '''
     ########## Code starts here ##########
+    alpha, r, idx = [], [], []
+    SplitHelper(theta, rho, startIdx, endIdx, params, alpha, r, idx)
+    alpha, r, idx = np.array(alpha), np.array(r), np.array(idx)
 
     ########## Code ends here ##########
     return alpha, r, idx
+
+# the helper function used to recursively generate the alpha, r, idx of line segments
+def SplitHelper(theta, rho, startIdx, endIdx, params, alpha, r, idx):
+
+    alpha_fit, r_fit = FitLine(theta[startIdx:endIdx], rho[startIdx:endIdx])
+    if (endIdx - startIdx) <= params['MIN_POINTS_PER_SEGMENT']:
+        alpha.append(alpha_fit)
+        r.append(r_fit)
+        idx.append([startIdx, endIdx])
+        return
+
+    splitIdx = FindSplit(theta[startIdx:endIdx], rho[startIdx:endIdx], alpha_fit, r_fit, params)
+    if splitIdx == -1:
+        alpha.append(alpha_fit)
+        r.append(r_fit)
+        idx.append([startIdx, endIdx])
+        return
+    else:
+        SplitHelper(theta, rho, startIdx, startIdx + splitIdx, params, alpha, r, idx)
+        SplitHelper(theta, rho, startIdx + splitIdx, endIdx, params, alpha, r, idx)
 
 def FindSplit(theta, rho, alpha, r, params):
     '''
@@ -140,6 +163,19 @@ def FindSplit(theta, rho, alpha, r, params):
         splitIdx: idx at which to split line (return -1 if it cannot be split).
     '''
     ########## Code starts here ##########
+    dist = np.absolute(rho * np.cos(theta - alpha) - r)
+
+    # let the minimum number of points at beginning and end
+    # be 0 and only find the split index at the remaining part
+    dist[:params['MIN_POINTS_PER_SEGMENT']] = 0
+    dist[-params['MIN_POINTS_PER_SEGMENT']:] = 0
+
+    # the split index is the index where the dist is max
+    max_idx = np.argmax(dist)
+    if dist[max_idx] > params['LINE_POINT_DIST_THRESHOLD']:
+        splitIdx = max_idx
+    else:
+        splitIdx = -1
 
     ########## Code ends here ##########
     return splitIdx
@@ -157,6 +193,22 @@ def FitLine(theta, rho):
         r: 'r' of best fit for range data (1 number) (m).
     '''
     ########## Code starts here ##########
+    n = np.size(theta)  # number of points
+
+    # calculate the parameter alpha
+    sum_1, sum_2 = 0, 0
+    for i in range(n):
+        for j in range(n):
+            sum_1 += rho[i] * rho[j] * np.cos(theta[i]) * np.sin(theta[j])
+            sum_2 += rho[i] * rho[j] * np.cos(theta[i]+theta[j])
+
+    numerator = np.sum(rho**2 * np.sin(2*theta)) - 2./n * sum_1
+    denominator = np.sum(rho**2 * np.cos(2*theta)) - 1./n * sum_2
+
+    alpha = 1./2 * np.arctan2(numerator, denominator) + 1./2 * np.pi
+
+    # calculate the parameter r
+    r = 1./n * np.sum(rho * np.cos(theta - alpha))
 
     ########## Code ends here ##########
     return alpha, r
@@ -183,7 +235,31 @@ def MergeColinearNeigbors(theta, rho, alpha, r, pointIdx, params):
           merge. If it can be split, do not merge.
     '''
     ########## Code starts here ##########
+    alphaOut, rOut, pointIdxOut = [], [], []
+    num_lines = pointIdx.shape[0]
+    for i in range(1, num_lines):
+         # fit one line for data from two line segments
+        start = min(pointIdx[i-1][0], pointIdx[i][0])
+        end = max(pointIdx[i-1][1], pointIdx[i][1])
 
+        alpha_fit, r_fit = FitLine(theta[start:end], rho[start:end])
+        splitIdx = FindSplit(theta[start:end], rho[start:end], alpha_fit, r_fit, params)
+
+        if splitIdx == -1:
+            # merge two line segments
+            pointIdxOut.append([start, end])
+            alphaOut.append(alpha_fit)
+            rOut.append(r_fit)
+        else:
+            # keep two line segments
+            pointIdxOut.append([pointIdx[i-1][0], pointIdx[i-1][1]])
+            pointIdxOut.append([pointIdx[i][0], pointIdx[i][1]])
+            alphaOut.append(alpha[i-1])
+            alphaOut.append(alpha[i])
+            rOut.append(r[i-1])
+            rOut.append(r[i])
+
+    alphaOut, rOut, pointIdxOut = np.array(alphaOut), np.array(rOut), np.array(pointIdxOut)
     ########## Code ends here ##########
     return alphaOut, rOut, pointIdxOut
 
