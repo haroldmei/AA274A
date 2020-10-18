@@ -116,36 +116,38 @@ class CameraCalibrator:
         '''
         ########## Code starts here ##########
 
-        n_images = len(H)
-        # Solve Vb = 0
-        V = np.zeros((2*n_images, 6))
-        # get hi and v_ij first
-        for n in range(n_images):
+        num = len(H)
+        V = np.zeros((2 * num, 6))
+
+        # v_ij = [hi1hj1, hi1hj2 + hi2hj1, hi2hj2, hi3hj1 + hi1hj3, hi3hj2 + hi2hj3, hi3hj3]
+        v_i_j = lambda h, i, j: [h[i - 1, 0] * h[j - 1, 0],
+                                h[i - 1, 0] * h[j - 1, 1] + h[i - 1, 1] * h[j - 1, 0],
+                                h[i - 1, 1] * h[j - 1, 1],
+                                h[i - 1, 2] * h[j - 1, 0] + h[i - 1, 0] * h[j - 1, 2],
+                                h[i - 1, 2] * h[j - 1, 1] + h[i - 1, 1] * h[j - 1, 2],
+                                h[i - 1, 2] * h[j - 1, 2]]
+        for n in range(num):
             h = H[n].T
-            v_ij = lambda i, j: np.array([h[i - 1, 0] * h[j - 1, 0],
-                                          h[i - 1, 0] * h[j - 1, 1] + h[i - 1, 1] * h[j - 1, 0],
-                                          h[i - 1, 1] * h[j - 1, 1],
-                                          h[i - 1, 2] * h[j - 1, 0] + h[i - 1, 0] * h[j - 1, 2],
-                                          h[i - 1, 2] * h[j - 1, 1] + h[i - 1, 1] * h[j - 1, 2],
-                                          h[i - 1, 2] * h[j - 1, 2]])
-            # note, v_ij is not transpose, so don't need transpose in V
-            V[2*n] = v_ij(1, 2)
-            V[2*n +1] = v_ij(1, 1)- v_ij(2, 2)
-        P, Q, solution = np.linalg.svd(V)
-        # b is associated with the smallest singular value
-        b = solution[-1, :]
-        B11, B12, B22, B13, B23, B33 = b
+            V[2*n] = v_i_j(h, 1, 2)
+            V[2*n +1] = v_i_j(h, 1, 1) - v_i_j(h, 2, 2)
 
+        # the smallest singular value 
+        _, _, v = np.linalg.svd(V)
+        B11, B12, B22, B13, B23, B33 = v[-1, :]
+
+        # write out the intrinsics according to appendix B
         v0 = (B12*B13-B11*B23) / (B11*B22-B12*B12)
-        lam = B33 - (B13**2 + v0 * (B12*B13 - B11*B23))/B11
-        alpha = np.sqrt(lam / B11)
-        beta = np.sqrt(lam * B11 / (B11*B22 - B12**2))
-        gamma = -B12 * alpha**2 * beta / lam
-        u0 = gamma * v0 / beta - B13 * alpha**2 / lam
 
-        A = np.array([[alpha, gamma, u0],
-                      [0, beta, v0],
-                      [0, 0, 1]])
+        lmbda = B33 - (B13**2 + v0 * (B12*B13 - B11*B23))/B11
+        alpha = np.sqrt(lmbda / B11)
+        beta = np.sqrt(lmbda * B11 / (B11*B22 - B12**2))
+        gamma = -B12 * alpha**2 * beta / lmbda
+
+        u0 = gamma * v0 / beta - B13 * alpha**2 / lmbda
+
+        A = np.array([[alpha, gamma, u0], [0, beta, v0], [0, 0, 1]])
+
+        # print A
         ########## Code ends here ##########
         return A
 
@@ -160,20 +162,19 @@ class CameraCalibrator:
         '''
         ########## Code starts here ##########
 
-        h1 = H[:, 0]
-        h2 = H[:, 1]
-        h3 = H[:, 2]
-        lam = 1 / np.linalg.norm(np.linalg.inv(A).dot(h1))
+        lmbda = 1 / np.linalg.norm(np.linalg.inv(A).dot(H[:, 0]))
 
-
-        r1 = lam * np.linalg.inv(A).dot(h1)
-        r2 = lam * np.linalg.inv(A).dot(h2)
+        r1 = lmbda * np.linalg.inv(A).dot(H[:, 0])
+        r2 = lmbda * np.linalg.inv(A).dot(H[:, 1])
         r3 = np.cross(r1, r2)
-        t = lam * np.linalg.inv(A).dot(h3)
 
         Q = np.hstack((r1.reshape(np.size(r1), 1), r2.reshape(np.size(r2), 1), r3.reshape(np.size(r3), 1)))
-        U, S, V_T = np.linalg.svd(Q)
+        
+        print Q
+        U, _, V_T = np.linalg.svd(Q)
         R = np.matmul(U, V_T)
+
+        t = lmbda * np.linalg.inv(A).dot(H[:, 2])
         ########## Code ends here ##########
         return R, t
 
