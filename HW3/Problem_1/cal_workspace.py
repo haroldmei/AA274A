@@ -22,7 +22,7 @@ def main():
     # display_flag: True to display images and corners as they are loaded
     #               Feel free to change this to False while developing/debugging
     n_disp_img = 23
-    display_flag = True
+    display_flag = False
 
     cc.loadImages(cal_img_path, name, n_corners, square_length, n_disp_img, display_flag)
 

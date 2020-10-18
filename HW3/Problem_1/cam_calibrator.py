@@ -71,16 +71,9 @@ class CameraCalibrator:
         HINT: it does not matter where your frame it, as long as you are consistent!
         '''
         ########## Code starts here ##########
-        row_idx = np.linspace(0, self.d_square*(self.n_corners_x-1), self.n_corners_x)
-        col_idx = np.linspace(0, self.d_square * (self.n_corners_y - 1), self.n_corners_y).reshape(self.n_corners_y, 1)
-        col_idx = col_idx[::-1]
-
-        X_world = np.broadcast_to(row_idx, (self.n_corners_y, self.n_corners_x)).reshape(-1)
-        Y_world = np.broadcast_to(col_idx, (self.n_corners_y, self.n_corners_x)).reshape(-1)
-        Xg = [X_world]*self.n_chessboards
-        Yg = [Y_world]*self.n_chessboards
-
-        corner_coordinates = (Xg, Yg)
+        rows = [np.array([[self.d_square * i for i in range(self.n_corners_x)]] * self.n_corners_y).flatten()] * self.n_chessboards
+        cols = [np.array([[self.d_square * i] * self.n_corners_x for i in range(self.n_corners_y)]).flatten()] * self.n_chessboards
+        corner_coordinates = (rows, cols)
         ########## Code ends here ##########
         return corner_coordinates
 
@@ -99,19 +92,13 @@ class CameraCalibrator:
         HINT: np.stack and/or np.hstack may come in handy here.
         '''
         ########## Code starts here ##########
-        num_points = u_meas.size # 63 points
+        L = np.zeros((2 * u_meas.size, 9))
+        for i in range(u_meas.size):
+            L[2*i] = [X[i],Y[i],1,0,0,0,-u_meas[i]*X[i],-u_meas[i]*Y[i],-u_meas[i]]
+            L[2*i+1] = [0,0,0,X[i],Y[i],1,-v_meas[i]*X[i],-v_meas[i]*Y[i],-v_meas[i]]
 
-        # size of matrix L (2n x 9)
-        L = np.zeros((2*num_points, 9))
-        # note, write the world coordinates in homogeneous form
-        for i in range(num_points):
-            L[2 * i] = [X[i], Y[i], 1, 0, 0, 0, -u_meas[i] * X[i], -u_meas[i] * Y[i], -u_meas[i]]
-            L[2 * i + 1] = [0, 0, 0, X[i], Y[i], 1, -v_meas[i] * X[i], -v_meas[i] * Y[i], -v_meas[i]]
-
-        # x is the right singular vector of L, which is the third output of svd
-        P, D, x = np.linalg.svd(L)
-        # associated with the smallest singular value is the last one , descending order
-        H = np.reshape(x[-1,:], (3, 3))
+        _, _, v = np.linalg.svd(L)
+        H = np.reshape(v[-1,:], (3, 3)) # corresponds to the smallest eigenvalue
         ########## Code ends here ##########
         return H
 
