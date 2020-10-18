@@ -128,8 +128,8 @@ class CameraCalibrator:
                                 h[i - 1, 2] * h[j - 1, 2]]
         for n in range(num):
             h = H[n].T
-            V[2*n] = v_i_j(h, 1, 2)
-            V[2*n +1] = v_i_j(h, 1, 1) - v_i_j(h, 2, 2)
+            V[2*n] = np.array(v_i_j(h, 1, 2))
+            V[2*n +1] = np.array(v_i_j(h, 1, 1)) - np.array(v_i_j(h, 2, 2))
 
         # the smallest singular value 
         _, _, v = np.linalg.svd(V)
@@ -161,20 +161,16 @@ class CameraCalibrator:
             t: the translation vector
         '''
         ########## Code starts here ##########
-
         lmbda = 1 / np.linalg.norm(np.linalg.inv(A).dot(H[:, 0]))
-
         r1 = lmbda * np.linalg.inv(A).dot(H[:, 0])
         r2 = lmbda * np.linalg.inv(A).dot(H[:, 1])
         r3 = np.cross(r1, r2)
-
         Q = np.hstack((r1.reshape(np.size(r1), 1), r2.reshape(np.size(r2), 1), r3.reshape(np.size(r3), 1)))
-        
-        print Q
-        U, _, V_T = np.linalg.svd(Q)
-        R = np.matmul(U, V_T)
+        #print Q
 
-        t = lmbda * np.linalg.inv(A).dot(H[:, 2])
+        U, _, V_T = np.linalg.svd(Q)
+        R, t = np.matmul(U, V_T) , lmbda * np.linalg.inv(A).dot(H[:, 2])
+
         ########## Code ends here ##########
         return R, t
 
