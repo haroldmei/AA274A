@@ -116,32 +116,28 @@ def SplitLinesRecursive(theta, rho, startIdx, endIdx, params):
     HINT: Call FindSplit() to find an index to split at.
     '''
     ########## Code starts here ##########
-    alpha, r, idx = [], [], []
-    SplitHelper(theta, rho, startIdx, endIdx, params, alpha, r, idx)
-    alpha, r, idx = np.array(alpha), np.array(r), np.array(idx)
+    # recursion
+    def Recurse(theta, rho, startIdx, endIdx, params, a, r, i):
+        a_fit, r_fit = FitLine(theta[startIdx:endIdx], rho[startIdx:endIdx])
+        if (endIdx - startIdx) <= params['MIN_POINTS_PER_SEGMENT']:
+            a.append(a_fit)
+            r.append(r_fit)
+            i.append([startIdx, endIdx])
+        else:
+            s = FindSplit(theta[startIdx:endIdx], rho[startIdx:endIdx], a_fit, r_fit, params)
+            if s == -1:
+                a.append(a_fit)
+                r.append(r_fit)
+                i.append([startIdx, endIdx])
+            else:
+                Recurse(theta, rho, startIdx, startIdx + s, params, a, r, i)
+                Recurse(theta, rho, startIdx + s, endIdx, params, a, r, i)
 
+    alpha, r, idx = [], [], []
+    Recurse(theta, rho, startIdx, endIdx, params, alpha, r, idx)
+    alpha, r, idx = np.array(alpha), np.array(r), np.array(idx)
     ########## Code ends here ##########
     return alpha, r, idx
-
-# the helper function used to recursively generate the alpha, r, idx of line segments
-def SplitHelper(theta, rho, startIdx, endIdx, params, alpha, r, idx):
-
-    alpha_fit, r_fit = FitLine(theta[startIdx:endIdx], rho[startIdx:endIdx])
-    if (endIdx - startIdx) <= params['MIN_POINTS_PER_SEGMENT']:
-        alpha.append(alpha_fit)
-        r.append(r_fit)
-        idx.append([startIdx, endIdx])
-        return
-
-    splitIdx = FindSplit(theta[startIdx:endIdx], rho[startIdx:endIdx], alpha_fit, r_fit, params)
-    if splitIdx == -1:
-        alpha.append(alpha_fit)
-        r.append(r_fit)
-        idx.append([startIdx, endIdx])
-        return
-    else:
-        SplitHelper(theta, rho, startIdx, startIdx + splitIdx, params, alpha, r, idx)
-        SplitHelper(theta, rho, startIdx + splitIdx, endIdx, params, alpha, r, idx)
 
 def FindSplit(theta, rho, alpha, r, params):
     '''
@@ -163,16 +159,17 @@ def FindSplit(theta, rho, alpha, r, params):
         splitIdx: idx at which to split line (return -1 if it cannot be split).
     '''
     ########## Code starts here ##########
-    dist = np.absolute(rho * np.cos(theta - alpha) - r)
+    d = abs(rho * np.cos(theta - alpha) - r)
 
     # let the minimum number of points at beginning and end
     # be 0 and only find the split index at the remaining part
-    dist[:params['MIN_POINTS_PER_SEGMENT']] = 0
-    dist[-params['MIN_POINTS_PER_SEGMENT']:] = 0
+    d[:params['MIN_POINTS_PER_SEGMENT']] = 0
+    d[-params['MIN_POINTS_PER_SEGMENT']:] = 0
+    #print d
 
     # the split index is the index where the dist is max
-    max_idx = np.argmax(dist)
-    if dist[max_idx] > params['LINE_POINT_DIST_THRESHOLD']:
+    max_idx = np.argmax(d)
+    if d[max_idx] > params['LINE_POINT_DIST_THRESHOLD']:
         splitIdx = max_idx
     else:
         splitIdx = -1
@@ -292,9 +289,9 @@ def main():
     #       y_r is the robot's y position
     #       N_pts is the number of beams (e.g. 180 -> beams are 2deg apart)
 
-    filename = 'rangeData_5_5_180.csv'
-    # filename = 'rangeData_4_9_360.csv'
-    # filename = 'rangeData_7_2_90.csv'
+    #filename = 'rangeData_5_5_180.csv'
+    filename = 'rangeData_4_9_360.csv'
+    #filename = 'rangeData_7_2_90.csv'
 
     # Import Range Data
     RangeData = ImportRangeData(filename)
