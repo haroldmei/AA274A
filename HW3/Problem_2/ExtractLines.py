@@ -160,19 +160,15 @@ def FindSplit(theta, rho, alpha, r, params):
     '''
     ########## Code starts here ##########
     d = abs(rho * np.cos(theta - alpha) - r)
-
-    # let the minimum number of points at beginning and end
-    # be 0 and only find the split index at the remaining part
-    d[:params['MIN_POINTS_PER_SEGMENT']] = 0
-    d[-params['MIN_POINTS_PER_SEGMENT']:] = 0
-    #print d
-
-    # the split index is the index where the dist is max
-    max_idx = np.argmax(d)
-    if d[max_idx] > params['LINE_POINT_DIST_THRESHOLD']:
-        splitIdx = max_idx
-    else:
-        splitIdx = -1
+    i1 = params['MIN_POINTS_PER_SEGMENT']
+    i2 = len(d) - i1 + 1
+    
+    # split where the dist is max
+    splitIdx = -1
+    if i2 > i1:
+        max_idx = np.argmax(d[i1:i2]) + i1
+        if d[max_idx] > params['LINE_POINT_DIST_THRESHOLD']:
+            splitIdx = max_idx
 
     ########## Code ends here ##########
     return splitIdx
@@ -190,23 +186,11 @@ def FitLine(theta, rho):
         r: 'r' of best fit for range data (1 number) (m).
     '''
     ########## Code starts here ##########
-    n = np.size(theta)  # number of points
-
-    # calculate the parameter alpha
-    sum_1, sum_2 = 0, 0
-    for i in range(n):
-        for j in range(n):
-            sum_1 += rho[i] * rho[j] * np.cos(theta[i]) * np.sin(theta[j])
-            sum_2 += rho[i] * rho[j] * np.cos(theta[i]+theta[j])
-
-    numerator = np.sum(rho**2 * np.sin(2*theta)) - 2./n * sum_1
-    denominator = np.sum(rho**2 * np.cos(2*theta)) - 1./n * sum_2
-
-    alpha = 1./2 * np.arctan2(numerator, denominator) + 1./2 * np.pi
-
-    # calculate the parameter r
+    n = np.size(theta)
+    a = np.sum([rho[i] * rho[j] * np.cos(theta[i]) * np.sin(theta[j]) for j in range(n) for i in range(n)])
+    b = np.sum([rho[i] * rho[j] * np.cos(theta[i]+theta[j]) for j in range(n) for i in range(n)])
+    alpha = 1./2 * np.arctan2(np.sum(rho**2 * np.sin(2*theta)) - 2./n * a, np.sum(rho**2 * np.cos(2*theta)) - 1./n * b) + 1./2 * np.pi
     r = 1./n * np.sum(rho * np.cos(theta - alpha))
-
     ########## Code ends here ##########
     return alpha, r
 
@@ -233,22 +217,18 @@ def MergeColinearNeigbors(theta, rho, alpha, r, pointIdx, params):
     '''
     ########## Code starts here ##########
     alphaOut, rOut, pointIdxOut = [], [], []
-    num_lines = pointIdx.shape[0]
-    for i in range(1, num_lines):
-         # fit one line for data from two line segments
-        start = min(pointIdx[i-1][0], pointIdx[i][0])
-        end = max(pointIdx[i-1][1], pointIdx[i][1])
-
-        alpha_fit, r_fit = FitLine(theta[start:end], rho[start:end])
-        splitIdx = FindSplit(theta[start:end], rho[start:end], alpha_fit, r_fit, params)
-
+    num, _ = pointIdx.shape
+    for i in range(1, num):
+         # merge lines if possible
+        i1 = min(pointIdx[i-1][0], pointIdx[i][0])
+        i2 = max(pointIdx[i-1][1], pointIdx[i][1])
+        a_fit, r_fit = FitLine(theta[i1:i2], rho[i1:i2])
+        splitIdx = FindSplit(theta[i1:i2], rho[i1:i2], a_fit, r_fit, params)
         if splitIdx == -1:
-            # merge two line segments
-            pointIdxOut.append([start, end])
-            alphaOut.append(alpha_fit)
+            pointIdxOut.append([i1, i2])
+            alphaOut.append(a_fit)
             rOut.append(r_fit)
         else:
-            # keep two line segments
             pointIdxOut.append([pointIdx[i-1][0], pointIdx[i-1][1]])
             pointIdxOut.append([pointIdx[i][0], pointIdx[i][1]])
             alphaOut.append(alpha[i-1])
@@ -289,8 +269,8 @@ def main():
     #       y_r is the robot's y position
     #       N_pts is the number of beams (e.g. 180 -> beams are 2deg apart)
 
-    #filename = 'rangeData_5_5_180.csv'
-    filename = 'rangeData_4_9_360.csv'
+    filename = 'rangeData_5_5_180.csv'
+    #filename = 'rangeData_4_9_360.csv'
     #filename = 'rangeData_7_2_90.csv'
 
     # Import Range Data
