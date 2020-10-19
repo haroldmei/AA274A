@@ -185,18 +185,10 @@ class CameraCalibrator:
 
         '''
         ########## Code starts here ##########
-
-        num_points = np.size(X) # 63 points
-
-        # get points in world frame in homogeneous form
-        P = np.array([X[0], Y[0], Z[0], 1.]).reshape(4, 1)
-        for i in range(1, num_points):
-            P = np.hstack((P, np.array([X[i], Y[i], Z[i], 1.]).reshape(4, 1)))
-
+        P_w = np.array([X,Y,Z,[1] * np.size(X)])
         Rt = np.hstack((R, t.reshape(3, 1)))  # 3x4
-        p = np.matmul(Rt, P) # 3x63
+        p = np.matmul(Rt, P_w) # 3x63
         p = np.divide(p, p[-1, :]) # transform to homogenous form
-
         x = p[0, :]
         y = p[1, :]
         ########## Code ends here ##########
@@ -213,22 +205,13 @@ class CameraCalibrator:
             u, v: the coordinates in the ideal pixel image plane
         '''
         ########## Code starts here ##########
-
-        num_points = np.size(X) # 63 points
-
-        # get points in world frame in homogeneous form
-        P = np.array([X[0], Y[0], Z[0], 1.]).reshape(4, 1)
-        for i in range(1, num_points):
-            P = np.hstack((P, np.array([X[i], Y[i], Z[i], 1.]).reshape(4, 1)))
-
-        Rt = np.hstack((R, t.reshape(3, 1)))  # 3x4
+        P_w = np.array([X,Y,Z,[1] * np.size(X)])
+        Rt = np.hstack((R, t.reshape(3, 1)))
         M = np.matmul(A, Rt) # 3x63
-        p = np.matmul(M, P)
-        p = np.divide(p, p[-1, :]) # transform to homogeneous form
-
+        p = np.matmul(M, P_w)
+        p = np.divide(p, p[-1, :])
         u = p[0, :]
         v = p[1, :]
-
         ########## Code ends here ##########
         return u, v
 
