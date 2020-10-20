@@ -14,15 +14,18 @@ def half_downscale(image):
         downscaled_image: A half-downscaled version of image.
     """
     ########## Code starts here ##########
-    m, n, c = image.shape[0], image.shape[1], image.shape[2]
-    down_scaleim = np.zeros((m/2, n/2, c))
+    m, n, c = image.shape
+    row = np.zeros((0, n, c))
+    for i in range(m):
+        if i % 2 == 0:
+            row = np.vstack((row, image[None,i,:,:]))
 
-    for i in range(m/2):
-        for j in range(n/2):
-            for k in range(c):
-                down_scaleim[i, j, k] = image[2*i, 2*j, k]
-    return down_scaleim
-
+    column = np.zeros((row.shape[0], 0, c))
+    for i in range(row.shape[1]):
+        if i % 2 == 0:
+            column = np.hstack((column, row[:,None,i,:]))
+            
+    return column
     ########## Code ends here ##########
 
 
@@ -35,12 +38,10 @@ def blur_half_downscale(image):
         downscaled_image: A half-downscaled version of image.
     """
     ########## Code starts here ##########
-    blur_im = cv2.GaussianBlur(image, ksize=(5, 5), sigmaX=0.7)
+    downscale_blurred = cv2.GaussianBlur(image, ksize=(5, 5), sigmaX=0.7)
+    downscale_blurred = half_downscale(image)
 
-    downscaled_image = half_downscale(blur_im)
-
-    return downscaled_image
-
+    return downscale_blurred
     ########## Code ends here ##########
 
 
@@ -50,24 +51,12 @@ def two_upscale(image):
         image: An (m, n, c)-shaped ndarray containing an m x n image (with c channels).
     
     Returns
-        upscaled_image: A 2x-upscaled version of image.
+        upscaled: A 2x-upscaled version of image.
     """
     ########## Code starts here ##########
-    m, n, c = image.shape[0], image.shape[1], image.shape[2]
-    double_width = np.zeros((m, 2*n, c))
-
-    for i in range(n):
-        for k in range(c):
-            double_width[:, 2 * i, k] = image[:, i, k]
-            double_width[:, 2 * i + 1, k] = image[:, i, k]
-
-    upscaled_image = np.zeros((2 * m, 2 * n, c))
-    for j in range(m):
-        for t in range(c):
-            upscaled_image[2 * j, :, t] = double_width[j, :, t]
-            upscaled_image[2 * j + 1, :, t] = double_width[j, :, t]
-
-    return upscaled_image
+    image = np.repeat(image, 2, axis=0)
+    image = np.repeat(image, 2, axis=1)
+    return image
     ########## Code ends here ##########
 
 
@@ -78,7 +67,7 @@ def bilinterp_upscale(image, scale):
         scale: How much larger to make the image
 
     Returns
-        upscaled_image: A scale-times upscaled version of image.
+        upscaled: A scale-times upscaled version of image.
     """
     m, n, c = image.shape
 
@@ -87,20 +76,11 @@ def bilinterp_upscale(image, scale):
     filt = f.T * f
 
     ########## Code starts here ##########
-    print filt
-
-    upwidth_im = np.zeros((m, scale * n, c))
-
-    upscaled_image = np.zeros((scale * m, scale * n, c))
-
-    for i in range(n):
-        for k in range(c):
-            upwidth_im[:, scale * i, k] = image[:, i, k]
-
-    for j in range(m):
-        for t in range(c):
-            upscaled_image[scale * j, :, t] = upwidth_im[j, :, t]
-    return cv2.filter2D(upscaled_image, -1, filt)
+    desired_img = np.zeros(((m-1)*scale+1, (n-1)*scale+1, c))
+    for i in range(m-1):
+        for j in range(n-1):
+            desired_img[scale*i, scale*j, :] = image[i,j,:]
+    return cv2.filter2D(desired_img, -1, filt)
     ########## Code ends here ##########
 
 

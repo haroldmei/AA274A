@@ -258,6 +258,7 @@ def ImportRangeData(filename):
 # Main
 ############################################################
 def main():
+    import sys
     # parameters for line extraction (mess with these!)
     MIN_SEG_LENGTH = 0.05  # minimum length of each line segment (m)
     LINE_POINT_DIST_THRESHOLD = 0.02  # max distance of pt from line to split
@@ -272,6 +273,8 @@ def main():
     filename = 'rangeData_5_5_180.csv'
     #filename = 'rangeData_4_9_360.csv'
     #filename = 'rangeData_7_2_90.csv'
+    if sys.argv:
+        filename = sys.argv[1]
 
     # Import Range Data
     RangeData = ImportRangeData(filename)
