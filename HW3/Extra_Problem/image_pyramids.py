@@ -39,7 +39,7 @@ def blur_half_downscale(image):
     """
     ########## Code starts here ##########
     downscale_blurred = cv2.GaussianBlur(image, ksize=(5, 5), sigmaX=0.7)
-    downscale_blurred = half_downscale(image)
+    downscale_blurred = half_downscale(downscale_blurred)
 
     return downscale_blurred
     ########## Code ends here ##########
@@ -76,11 +76,15 @@ def bilinterp_upscale(image, scale):
     filt = f.T * f
 
     ########## Code starts here ##########
-    desired_img = np.zeros(((m-1)*scale+1, (n-1)*scale+1, c))
-    for i in range(m-1):
-        for j in range(n-1):
-            desired_img[scale*i, scale*j, :] = image[i,j,:]
-    return cv2.filter2D(desired_img, -1, filt)
+    width = np.zeros((m, scale * n, c))
+    upscaled = np.zeros((scale * m, scale * n, c))
+    for i in range(n):
+        for k in range(c):
+            width[:, scale * i, k] = image[:, i, k]
+    for j in range(m):
+        for t in range(c):
+            upscaled[scale * j, :, t] = width[j, :, t]
+    return cv2.filter2D(upscaled, -1, filt)
     ########## Code ends here ##########
 
 
@@ -103,11 +107,13 @@ def main():
     upscale_im = two_upscale(favicon)
     bilin_upscale_im = bilinterp_upscale(favicon, 8)
 
-    for i in range(2):
-        down_scale_image = half_downscale(down_scale_image)
-        blurdown_scale_image = blur_half_downscale(blurdown_scale_image)
-        upscale_im = two_upscale(upscale_im)
+    down_scale_image = half_downscale(down_scale_image)
+    blurdown_scale_image = blur_half_downscale(blurdown_scale_image)
+    upscale_im = two_upscale(upscale_im)
 
+    down_scale_image = half_downscale(down_scale_image)
+    blurdown_scale_image = blur_half_downscale(blurdown_scale_image)
+    upscale_im = two_upscale(upscale_im)
 
     plt.imshow(down_scale_image)
     plt.show()

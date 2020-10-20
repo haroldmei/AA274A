@@ -216,27 +216,34 @@ def MergeColinearNeigbors(theta, rho, alpha, r, pointIdx, params):
           merge. If it can be split, do not merge.
     '''
     ########## Code starts here ##########
-    alphaOut, rOut, pointIdxOut = [], [], []
-    num, _ = pointIdx.shape
-    for i in range(1, num):
-         # merge lines if possible
-        i1 = min(pointIdx[i-1][0], pointIdx[i][0])
-        i2 = max(pointIdx[i-1][1], pointIdx[i][1])
-        a_fit, r_fit = FitLine(theta[i1:i2], rho[i1:i2])
-        splitIdx = FindSplit(theta[i1:i2], rho[i1:i2], a_fit, r_fit, params)
-        if splitIdx == -1:
-            pointIdxOut.append([i1, i2])
-            alphaOut.append(a_fit)
-            rOut.append(r_fit)
+    num = len(alpha)
+    alphaOut = np.array([])
+    rOut = np.array([])
+    pointIdxOut = np.zeros((0, 2), dtype=np.int)
+    i = 0
+    while i < num:
+        # all done
+        if i == num - 1:
+            alphaOut = np.hstack((alphaOut, alpha[i]))
+            rOut = np.hstack((rOut, r[i]))
+            pointIdxOut = np.vstack((pointIdxOut, pointIdx[i,:]))
+            break
+        i1,i2 = pointIdx[i,0],pointIdx[i+1,1]
+        a_i, r_i = FitLine(theta[i1: i2], rho[i1: i2])
+        s = FindSplit(theta[i1: i2], rho[i1: i2], a_i, r_i, params)
+        
+        # no longer splittable
+        if s == -1:
+            alphaOut = np.hstack((alphaOut, a_i))
+            rOut = np.hstack((rOut, r_i))
+            pointIdxOut = np.vstack(pointIdxOut, (i1, i2))
+            i += 2
         else:
-            pointIdxOut.append([pointIdx[i-1][0], pointIdx[i-1][1]])
-            pointIdxOut.append([pointIdx[i][0], pointIdx[i][1]])
-            alphaOut.append(alpha[i-1])
-            alphaOut.append(alpha[i])
-            rOut.append(r[i-1])
-            rOut.append(r[i])
-
-    alphaOut, rOut, pointIdxOut = np.array(alphaOut), np.array(rOut), np.array(pointIdxOut)
+            alphaOut = np.hstack((alphaOut, alpha[i]))
+            rOut = np.hstack((rOut, r[i]))
+            pointIdxOut = np.vstack((pointIdxOut, pointIdx[i,:]))
+            i += 1
+    #print alphaOut.shape, rOut.shape, pointIdxOut.shape
     ########## Code ends here ##########
     return alphaOut, rOut, pointIdxOut
 
@@ -273,7 +280,7 @@ def main():
     filename = 'rangeData_5_5_180.csv'
     #filename = 'rangeData_4_9_360.csv'
     #filename = 'rangeData_7_2_90.csv'
-    if sys.argv:
+    if len(sys.argv) > 1:
         filename = sys.argv[1]
 
     # Import Range Data
