@@ -236,7 +236,7 @@ def MergeColinearNeigbors(theta, rho, alpha, r, pointIdx, params):
         if s == -1:
             alphaOut = np.hstack((alphaOut, a_i))
             rOut = np.hstack((rOut, r_i))
-            pointIdxOut = np.vstack(pointIdxOut, (i1, i2))
+            pointIdxOut = np.vstack((pointIdxOut, (i1, i2)))
             i += 2
         else:
             alphaOut = np.hstack((alphaOut, alpha[i]))
