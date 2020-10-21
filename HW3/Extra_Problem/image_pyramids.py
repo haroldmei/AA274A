@@ -19,12 +19,12 @@ def half_downscale(image):
     for i in range(m):
         if i % 2 == 0:
             row = np.vstack((row, image[None,i,:,:]))
-
     column = np.zeros((row.shape[0], 0, c))
     for i in range(row.shape[1]):
         if i % 2 == 0:
             column = np.hstack((column, row[:,None,i,:]))
             
+    print column.shape, image.shape
     return column
     ########## Code ends here ##########
 
@@ -116,12 +116,19 @@ def main():
     upscale_im = two_upscale(upscale_im)
 
     plt.imshow(down_scale_image)
+    plt.title('half_downscale 3 times')
     plt.show()
+
     plt.imshow(blurdown_scale_image)
+    plt.title('blurdown_scale_image 3 times')
     plt.show()
+
     plt.imshow(upscale_im)
+    plt.title('two_upscale 3 times')
     plt.show()
+
     plt.imshow(bilin_upscale_im)
+    plt.title('bilinterp_upscale')
     plt.show()
 
     ########## Code ends here ##########

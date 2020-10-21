@@ -71,7 +71,7 @@ def main():
     image = cv2.imread('messipyr.jpg')
 
     matches = template_match(template, image)
-    create_and_save_detection_image(image, matches)
+    create_and_save_detection_image(image, matches, 'messipyr.jpg.png')
 
     template = cv2.imread('stop_signs/stop_template.jpg').astype(np.float32)
     for i in range(1, 6):
