@@ -41,7 +41,8 @@ class Ekf(object):
 
         ########## Code starts here ##########
         # TODO: Update self.x, self.Sigma.
-
+        self.x = g
+        self.Sigma = np.matmul(Gx, np.matmul(self.Sigma, Gx.T)) + dt*np.matmul(Gu, np.matmul(self.R, Gu.T))
 
         ########## Code ends here ##########
 
@@ -135,7 +136,7 @@ class EkfLocalization(Ekf):
         ########## Code starts here ##########
         # TODO: Compute g, Gx, Gu using tb.compute_dynamics().
 
-
+        g, Gx, Gu = tb.compute_dynamics(self.x, u, dt)
         ########## Code ends here ##########
 
         return g, Gx, Gu
@@ -228,6 +229,7 @@ class EkfLocalization(Ekf):
             # TODO: Compute h, Hx using tb.transform_line_to_scanner_frame() for the j'th map line.
             # HINT: This should be a single line of code.
 
+            h, Hx = tb.transform_line_to_scanner_frame(self.map_lines[:, j], self.x, self.tf_base_to_camera)
 
             ########## Code ends here ##########
 
