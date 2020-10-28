@@ -208,6 +208,7 @@ class EkfLocalization(Ekf):
         J = len(hs)
         v_list = []
         Q_list = []
+        H_list = []
         for i in range(I):
             vlist = []
             qlist = []
