@@ -307,8 +307,10 @@ class EkfSlam(Ekf):
         # TODO: Compute g, Gx, Gu.
         # HINT: This should be very similar to EkfLocalization.transition_model() and take 1-5 lines of code.
         # HINT: Call tb.compute_dynamics() with the correct elements of self.x
-
-
+        g_, Gx_, Gu_ = tb.compute_dynamics(self.x, u, dt)
+        g[:3,:] = g_
+        Gx[:3, :3] = Gx_
+        Gu[:3, :] = Gu_
         ########## Code ends here ##########
 
         return g, Gx, Gu
@@ -433,7 +435,7 @@ class EkfSlam(Ekf):
             # HINT: For the other map lines (j>2), write out h in terms of alpha and r to get the Jacobian Hx.
             line = (alpha, r)
 
-            h, Hx[:,:3] = tb.transform_line_to_scanner_frame(line, self.x, self.tf_base_to_camera)
+            h, Hx[:,:3] = tb.transform_line_to_scanner_frame(line, self.x[:3], self.tf_base_to_camera)
             # First two map lines are assumed fixed so we don't want to propagate
             # any measurement correction to them.
             if j >= 2:
