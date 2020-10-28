@@ -368,7 +368,7 @@ class EkfSlam(Ekf):
         th = self.tf_base_to_camera[2] + self.x[2]
         R_c_w = np.array([
             [ np.cos(th), np.sin(th), 0], \
-            [-np.sin(th), np.cos(th), 0],
+            [-np.sin(th), np.cos(th), 0], \
             [ 0,0,1]
         ])
         x_cam, y_cam, th_cam = np.dot(np.linalg.inv(R_c_w), self.tf_base_to_camera) + self.x[:3]
