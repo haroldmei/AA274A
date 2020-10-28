@@ -82,7 +82,10 @@ class Ekf(object):
 
         ########## Code starts here ##########
         # TODO: Update self.x, self.Sigma.
-
+        S = np.dot(H, np.dot(self.Sigma, H.T)) + Q
+        K = np.dot(self.Sigma, np.dot(H.T, np.linalg.inv(S)))
+        self.x = self.x + np.dot(K, z).flatten()
+        self.Sigma = self.Sigma - np.dot(K, np.dot(S, K.T))
 
         ########## Code ends here ##########
 
@@ -157,6 +160,15 @@ class EkfLocalization(Ekf):
         # HINT: The scipy.linalg.block_diag() function may be useful.
         # HINT: A list can be unpacked using the * (splat) operator. 
 
+        n,_ = v_list.shape
+        m,_ = Q_list.shape
+        z = v_list.reshape(-1, 1)   # form i column
+        Q = np.zeros((n*m, n*m))
+        
+        for i in range(m):
+            Q[i*d_z:(i+1)*d_z, i*d_z:(i+1)*d_z] = Q_list[i]
+
+        H = H_list.reshape((-1, 1))
 
         ########## Code ends here ##########
 
@@ -214,7 +226,7 @@ class EkfLocalization(Ekf):
             qlist = []
             hlist = []
             for j in range(J):
-                v = np.array([z_raw[i][0] - hs[j][0], angle_diff(z_raw[i][1], hs[j][1])])
+                  = np.array([z_raw[i][0] - hs[j][0], angle_diff(z_raw[i][1], hs[j][1])])
                 S = np.matmul(np.matmul(Hs[j], self.Sigma), Hs[j].T) + Q_raw[i]
                 d = np.dot(np.dot(v.T, np.linalg.inv(S)), v)
                 if d < self.g**2:
@@ -322,8 +334,15 @@ class EkfSlam(Ekf):
         ########## Code starts here ##########
         # TODO: Compute z, Q, H.
         # Hint: Should be identical to EkfLocalization.measurement_model().
+        n,_ = v_list.shape
+        m,_ = Q_list.shape
+        z = v_list.reshape(-1, 1)   # form i column
+        Q = np.zeros((n*m, n*m))
 
+        for i in range(m):
+            Q[i*d_z:(i+1)*d_z, i*d_z:(i+1)*d_z] = Q_list[i]
 
+        H = H_list.reshape((-1, 1))
         ########## Code ends here ##########
 
         return z, Q, H
@@ -352,6 +371,28 @@ class EkfSlam(Ekf):
         # TODO: Compute v_list, Q_list, H_list.
         # HINT: Should be almost identical to EkfLocalization.compute_innovations(). What is J now?
         # HINT: Instead of getting world-frame line parameters from self.map_lines, you must extract them from the state self.x.
+
+        I = len(z_raw)
+        J = len(hs)
+        v_list = []
+        Q_list = []
+        H_list = []
+        for i in range(I):
+            vlist = []
+            qlist = []
+            hlist = []
+            for j in range(J):
+                  = np.array([z_raw[i][0] - hs[j][0], angle_diff(z_raw[i][1], hs[j][1])])
+                S = np.matmul(np.matmul(Hs[j], self.Sigma), Hs[j].T) + Q_raw[i]
+                d = np.dot(np.dot(v.T, np.linalg.inv(S)), v)
+                if d < self.g**2:
+                    vlist.append(d)
+                    qlist.append(Q_raw[i])
+                    hlist.append(Hs[j])
+            idx = np.argmin(vlist)
+            v_list.append(vlist[idx])
+            Q_list.append(qlist[idx])
+            H_list.append(hlist[idx])
 
 
         ########## Code ends here ##########
