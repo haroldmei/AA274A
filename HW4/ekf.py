@@ -226,7 +226,7 @@ class EkfLocalization(Ekf):
             qlist = []
             hlist = []
             for j in range(J):
-                  = np.array([z_raw[i][0] - hs[j][0], angle_diff(z_raw[i][1], hs[j][1])])
+                v = np.array([z_raw[i][0] - hs[j][0], angle_diff(z_raw[i][1], hs[j][1])])
                 S = np.matmul(np.matmul(Hs[j], self.Sigma), Hs[j].T) + Q_raw[i]
                 d = np.dot(np.dot(v.T, np.linalg.inv(S)), v)
                 if d < self.g**2:
@@ -382,7 +382,7 @@ class EkfSlam(Ekf):
             qlist = []
             hlist = []
             for j in range(J):
-                  = np.array([z_raw[i][0] - hs[j][0], angle_diff(z_raw[i][1], hs[j][1])])
+                v = np.array([z_raw[i][0] - hs[j][0], angle_diff(z_raw[i][1], hs[j][1])])
                 S = np.matmul(np.matmul(Hs[j], self.Sigma), Hs[j].T) + Q_raw[i]
                 d = np.dot(np.dot(v.T, np.linalg.inv(S)), v)
                 if d < self.g**2:
