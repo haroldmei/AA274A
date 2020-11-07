@@ -160,15 +160,9 @@ class EkfLocalization(Ekf):
         # HINT: The scipy.linalg.block_diag() function may be useful.
         # HINT: A list can be unpacked using the * (splat) operator. 
 
-        n,_ = v_list.shape
-        m,_ = Q_list.shape
-        z = v_list.reshape(-1, 1)   # form i column
-        Q = np.zeros((n*m, n*m))
-        
-        for i in range(m):
-            Q[i*d_z:(i+1)*d_z, i*d_z:(i+1)*d_z] = Q_list[i]
-
-        H = H_list.reshape((-1, 1))
+        z = np.array(v_list).reshape(-1, 1)
+        Q = scipy.linalg.block_diag(*Q_list)
+        H = np.array(H_list).reshape(-1, H_list[0].shape[1])
 
         ########## Code ends here ##########
 
@@ -216,8 +210,9 @@ class EkfLocalization(Ekf):
         # HINT: For each of the I observed lines, 
         #       find the closest predicted line and the corresponding minimum Mahalanobis distance
         #       if the minimum distance satisfies the gating criteria, add corresponding entries to v_list, Q_list, H_list
-        I = len(z_raw)
-        J = len(hs)
+
+        I = len(z_raw[1])
+        J = len(hs[1])
         v_list = []
         Q_list = []
         H_list = []
@@ -225,18 +220,24 @@ class EkfLocalization(Ekf):
             vlist = []
             qlist = []
             hlist = []
+            d_min = self.g ** 2
+            idx = -1
             for j in range(J):
-                v = np.array([z_raw[i][0] - hs[j][0], angle_diff(z_raw[i][1], hs[j][1])])
+                v = z_raw[:,i] - hs[:,j] # np.array([z_raw[0][i] - hs[0][j], angle_diff(z_raw[1][i], hs[1][j])])
+                #v1 = np.array([z_raw[0][i] - hs[0][j], angle_diff(z_raw[1][i], hs[1][j])])
+                #if (v != v1).any():
+                #    print '!!!PANIC!!!', v, v1
                 S = np.matmul(np.matmul(Hs[j], self.Sigma), Hs[j].T) + Q_raw[i]
                 d = np.dot(np.dot(v.T, np.linalg.inv(S)), v)
-                if d < self.g**2:
-                    vlist.append(d)
-                    qlist.append(Q_raw[i])
-                    hlist.append(Hs[j])
-            idx = np.argmin(vlist)
-            v_list.append(vlist[idx])
-            Q_list.append(qlist[idx])
-            H_list.append(hlist[idx])
+                if d < d_min:
+                    d_min = d
+                    v1 = v
+                    q = Q_raw[i]
+                    h = Hs[j]
+            if d_min < self.g ** 2:
+                v_list.append(v1)
+                Q_list.append(q)
+                H_list.append(h)
 
         ########## Code ends here ##########
 
@@ -307,8 +308,8 @@ class EkfSlam(Ekf):
         # TODO: Compute g, Gx, Gu.
         # HINT: This should be very similar to EkfLocalization.transition_model() and take 1-5 lines of code.
         # HINT: Call tb.compute_dynamics() with the correct elements of self.x
-        g_, Gx_, Gu_ = tb.compute_dynamics(self.x, u, dt)
-        g[:3,:] = g_
+        g_, Gx_, Gu_ = tb.compute_dynamics(self.x[:3], u, dt)
+        g[:3] = g_
         Gx[:3, :3] = Gx_
         Gu[:3, :] = Gu_
         ########## Code ends here ##########
@@ -336,15 +337,9 @@ class EkfSlam(Ekf):
         ########## Code starts here ##########
         # TODO: Compute z, Q, H.
         # Hint: Should be identical to EkfLocalization.measurement_model().
-        n,_ = v_list.shape
-        m,_ = Q_list.shape
-        z = v_list.reshape(-1, 1)   # form i column
-        Q = np.zeros((n*m, n*m))
-
-        for i in range(m):
-            Q[i*d_z:(i+1)*d_z, i*d_z:(i+1)*d_z] = Q_list[i]
-
-        H = H_list.reshape((-1, 1))
+        z = np.array(v_list).reshape(-1, 1)
+        Q = scipy.linalg.block_diag(*Q_list)
+        H = np.array(H_list).reshape(-1, H_list[0].shape[1])
         ########## Code ends here ##########
 
         return z, Q, H
@@ -374,8 +369,31 @@ class EkfSlam(Ekf):
         # HINT: Should be almost identical to EkfLocalization.compute_innovations(). What is J now?
         # HINT: Instead of getting world-frame line parameters from self.map_lines, you must extract them from the state self.x.
 
-        I = len(z_raw)
-        J = len(hs)
+        #I = len(z_raw)
+        #J = len(hs)
+        #v_list = []
+        #Q_list = []
+        #H_list = []
+        #for i in range(I):
+        #    vlist = []
+        #    qlist = []
+        #    hlist = []
+        #    for j in range(J):
+        #        #v = np.array([z_raw[i][0] - hs[j][0], angle_diff(z_raw[i][1], hs[j][1])])
+        #        v = np.array([z_raw[0][i] - hs[0][j], angle_diff(z_raw[1][i], hs[1][j])])
+        #        S = np.matmul(np.matmul(Hs[j], self.Sigma), Hs[j].T) + Q_raw[i]
+        #        d = np.dot(np.dot(v.T, np.linalg.inv(S)), v)
+        #        if d < self.g**2:
+        #            vlist.append(d)
+        #            qlist.append(Q_raw[i])
+        #            hlist.append(Hs[j])
+        #    idx = np.argmin(vlist)
+        #    v_list.append(vlist[idx])
+        #    Q_list.append(qlist[idx])
+        #    H_list.append(hlist[idx])
+
+        I = len(z_raw[1])
+        J = len(hs[1])
         v_list = []
         Q_list = []
         H_list = []
@@ -383,18 +401,24 @@ class EkfSlam(Ekf):
             vlist = []
             qlist = []
             hlist = []
+            d_min = self.g ** 2
+            idx = -1
             for j in range(J):
-                v = np.array([z_raw[i][0] - hs[j][0], angle_diff(z_raw[i][1], hs[j][1])])
+                v = z_raw[:,i] - hs[:,j] # np.array([z_raw[0][i] - hs[0][j], angle_diff(z_raw[1][i], hs[1][j])])
+                #v1 = np.array([z_raw[0][i] - hs[0][j], angle_diff(z_raw[1][i], hs[1][j])])
+                #if (v != v1).any():
+                #    print '!!!PANIC!!!', v, v1
                 S = np.matmul(np.matmul(Hs[j], self.Sigma), Hs[j].T) + Q_raw[i]
                 d = np.dot(np.dot(v.T, np.linalg.inv(S)), v)
-                if d < self.g**2:
-                    vlist.append(d)
-                    qlist.append(Q_raw[i])
-                    hlist.append(Hs[j])
-            idx = np.argmin(vlist)
-            v_list.append(vlist[idx])
-            Q_list.append(qlist[idx])
-            H_list.append(hlist[idx])
+                if d < d_min:
+                    d_min = d
+                    v1 = v
+                    q = Q_raw[i]
+                    h = Hs[j]
+            if d_min < self.g ** 2:
+                v_list.append(v1)
+                Q_list.append(q)
+                H_list.append(h)
 
 
         ########## Code ends here ##########
