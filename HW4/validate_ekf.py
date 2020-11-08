@@ -231,6 +231,9 @@ def validate_localization_compute_innovations():
         H_error = sum([np.linalg.norm(H_list[j] - H_list_ref[k]) for j, k in enumerate(permutation)])
         if v_error + R_error + H_error > 1e-3:
             print("You may have an error in EkfLocalization.compute_innovations.")
+            print("v", v_list, v_list_ref)
+            print("R", R_list, R_list_ref)
+            print("H", H_list, H_list_ref)
             return False
 
     print("EkfLocalization.compute_innovations() seems to be correct")
@@ -310,13 +313,13 @@ def validate_ekf_slam():
 
 if __name__ == '__main__':
     ### PROBLEM 1
-    #validate_ekf_transition_update()
-    #validate_ekf_localization()
+    validate_ekf_transition_update()
+    validate_ekf_localization()
 
     ## Subcomponent validation
-    #validate_localization_transition_model()
-    #validate_localization_compute_predicted_measurements()
-    #validate_localization_compute_innovations()
+    validate_localization_transition_model()
+    validate_localization_compute_predicted_measurements()
+    validate_localization_compute_innovations()
 
     ### PROBLEM 2
 

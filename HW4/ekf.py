@@ -160,7 +160,7 @@ class EkfLocalization(Ekf):
         # HINT: The scipy.linalg.block_diag() function may be useful.
         # HINT: A list can be unpacked using the * (splat) operator. 
 
-        z = np.array(v_list).reshape(-1, 1)
+        z = np.array(v_list).reshape(-1, 1).flatten()
         Q = scipy.linalg.block_diag(*Q_list)
         H = np.array(H_list).reshape(-1, H_list[0].shape[1])
 
@@ -223,8 +223,9 @@ class EkfLocalization(Ekf):
             d_min = self.g ** 2
             idx = -1
             for j in range(J):
-                v = z_raw[:,i] - hs[:,j] # np.array([z_raw[0][i] - hs[0][j], angle_diff(z_raw[1][i], hs[1][j])])
-                #v1 = np.array([z_raw[0][i] - hs[0][j], angle_diff(z_raw[1][i], hs[1][j])])
+                #v1 = z_raw[:,i] - hs[:,j] 
+                #v = np.array([z_raw[0][i] - hs[0][j], angle_diff(z_raw[1][i], hs[1][j])])
+                v = np.array([angle_diff(z_raw[0][i], hs[0][j]), z_raw[1][i] - hs[1][j]])
                 #if (v != v1).any():
                 #    print '!!!PANIC!!!', v, v1
                 S = np.matmul(np.matmul(Hs[j], self.Sigma), Hs[j].T) + Q_raw[i]
@@ -337,11 +338,11 @@ class EkfSlam(Ekf):
         ########## Code starts here ##########
         # TODO: Compute z, Q, H.
         # Hint: Should be identical to EkfLocalization.measurement_model().
-        z = np.array(v_list).reshape(-1, 1)
+        z = np.array(v_list).reshape(-1, 1).flatten()
         Q = scipy.linalg.block_diag(*Q_list)
         H = np.array(H_list).reshape(-1, H_list[0].shape[1])
         ########## Code ends here ##########
-
+        #print Q
         return z, Q, H
 
     def compute_innovations(self, z_raw, Q_raw):
@@ -369,29 +370,6 @@ class EkfSlam(Ekf):
         # HINT: Should be almost identical to EkfLocalization.compute_innovations(). What is J now?
         # HINT: Instead of getting world-frame line parameters from self.map_lines, you must extract them from the state self.x.
 
-        #I = len(z_raw)
-        #J = len(hs)
-        #v_list = []
-        #Q_list = []
-        #H_list = []
-        #for i in range(I):
-        #    vlist = []
-        #    qlist = []
-        #    hlist = []
-        #    for j in range(J):
-        #        #v = np.array([z_raw[i][0] - hs[j][0], angle_diff(z_raw[i][1], hs[j][1])])
-        #        v = np.array([z_raw[0][i] - hs[0][j], angle_diff(z_raw[1][i], hs[1][j])])
-        #        S = np.matmul(np.matmul(Hs[j], self.Sigma), Hs[j].T) + Q_raw[i]
-        #        d = np.dot(np.dot(v.T, np.linalg.inv(S)), v)
-        #        if d < self.g**2:
-        #            vlist.append(d)
-        #            qlist.append(Q_raw[i])
-        #            hlist.append(Hs[j])
-        #    idx = np.argmin(vlist)
-        #    v_list.append(vlist[idx])
-        #    Q_list.append(qlist[idx])
-        #    H_list.append(hlist[idx])
-
         I = len(z_raw[1])
         J = len(hs[1])
         v_list = []
@@ -404,8 +382,9 @@ class EkfSlam(Ekf):
             d_min = self.g ** 2
             idx = -1
             for j in range(J):
-                v = z_raw[:,i] - hs[:,j] # np.array([z_raw[0][i] - hs[0][j], angle_diff(z_raw[1][i], hs[1][j])])
-                #v1 = np.array([z_raw[0][i] - hs[0][j], angle_diff(z_raw[1][i], hs[1][j])])
+                #v1 = z_raw[:,i] - hs[:,j]
+                #v = np.array([z_raw[0][i] - hs[0][j], angle_diff(z_raw[1][i], hs[1][j])])
+                v = np.array([angle_diff(z_raw[0][i], hs[0][j]), z_raw[1][i] - hs[1][j]])
                 #if (v != v1).any():
                 #    print '!!!PANIC!!!', v, v1
                 S = np.matmul(np.matmul(Hs[j], self.Sigma), Hs[j].T) + Q_raw[i]
@@ -433,6 +412,7 @@ class EkfSlam(Ekf):
         hs = np.zeros((2, J))
         Hx_list = []
         
+        ########## write out h wrt alpha and r  ##########
         th = self.tf_base_to_camera[2] + self.x[2]
         R_c_w = np.array([
             [ np.cos(th), np.sin(th), 0], \
@@ -444,7 +424,7 @@ class EkfSlam(Ekf):
         norm_cam = np.linalg.norm((x_cam, y_cam))
         #r_in_cam = r - norm_cam * np.cos(alpha - np.arctan2(y_cam, x_cam))
         #h = (alpha_in_cam, r_in_cam)
-
+        
         for j in range(J):
             idx_j = 3 + 2 * j
             alpha, r = self.x[idx_j:idx_j+2]
